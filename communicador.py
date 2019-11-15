@@ -19,9 +19,13 @@ telFrame=tkinter.Frame(app)
 chosen='3315528889'
 
 def startPorts():
+    connectb['state']='disabled'
     for puerto in range(len(puertos)):
         puertos[puerto].zoneSerial()
         statuses[puerto]['text']=puertos[puerto].status
+    time.sleep(0.5)
+    connectb['state']='normal'
+    
 def crossDial():
     print('calling')
     temp=[]  
@@ -93,10 +97,8 @@ for port in constants.PORTNUMBERS:
 cuadro=tkinter.Text(writeFrame,width=50,height=10)
 cuadro.grid(row=0,column=0,sticky=tkinter.N,columnspan=2,rowspan=10)
 t=threading.Thread(target=constantCheck,daemon=True)
-tkinter.Button(master=comFrame,text='connect',command= startPorts ).grid(
-    row=0,column=1)
-
-#tkinter.Scrollbar(master=comFrame).grid(column=2,rowspan=10)
+connectb=tkinter.Button(master=comFrame,text='connect',command= startPorts )
+connectb.grid(row=0,column=1)
 
 writeFrame.grid(row=0,column=0,sticky=tkinter.N)
 comFrame.grid(row=0,column=1)
