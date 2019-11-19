@@ -34,19 +34,19 @@ def crossDial():
             temp.append(x)
     for puerto in range(len(temp)//2):
         half=puerto+len(temp)//2
-        s=puertos[temp[puerto]].dial(telefonos[temp[half]].get(),int(segundos.get()))
+        s=puertos[temp[puerto]].dial(telefonos[temp[half]].get(),__getSeconds())
         if s:
             r=puertos[temp[half]].ans('3315528889')#va el entry
             if not r:
                 puertos[temp[puerto]].hang(0)
             else:
                 print('calling back')
-                puertos[temp[half]].dial(telefonos[temp[puerto]].get(),int(segundos.get()))
+                puertos[temp[half]].dial(telefonos[temp[puerto]].get(),__getSeconds())
                 puertos[temp[puerto]].ans('3315528889')#va el entry
 
     if len(temp) % 2!=0:
         indexsobrante=temp[-1]
-        puertos[indexsobrante].dial(chosen,int(segundos.get()))
+        puertos[indexsobrante].dial(chosen,__getSeconds())
     print('done')
 
 def constantCheck():
@@ -78,11 +78,21 @@ def changeImei():
             showinfo(title='hola',message=msg2)
     else:
         showinfo(title='hola',message='no se encontro el archivo')
+
 def setExtra():
     global chosen
     x=ch.get()
     if len(x)==10:
         chosen=x
+
+def __getSeconds():
+    try:
+        x=int(segundos.get())
+        return x
+    except ValueError:
+        showinfo(title='hola',message='segundos no validos')
+        segundos.insert(0,'60')
+        return 60
 
 for port in constants.PORTNUMBERS:
     puertos.append(comClass.Com(port))

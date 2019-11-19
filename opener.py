@@ -1,4 +1,4 @@
-archivo=''
+archivo=""
 
 
 def abrir(arch: str):
