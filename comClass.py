@@ -13,7 +13,7 @@ class Com(object):
         self.reading=threading.Lock()
 
 
-    def autoAnswer(self,origen):
+    def autoAnswer(self):
         self.candado.acquire()
         trt=1
         timeout=0
@@ -33,6 +33,8 @@ class Com(object):
                         print(x)
                 timeout+=trt
                 time.sleep(1)
+            if timeout==20:
+                print('nadie llamo a',self.comNumber)
             self.changeState(constants.OK)
         except serial.SerialException:
             self.puerto.close()
@@ -59,14 +61,12 @@ class Com(object):
             if tiempo!=0:
                 self.candado.release()
 
-    def ans(self,origen):
+    def ans(self):
         print(self.comNumber,"yo voy a contestar")
         if self.status!=constants.DIALING:
             self.startSerial()
-        print(self.comNumber,"listo a contestar:", self.status)
         if self.status==constants.OK or self.status==constants.DIALING:
             answer=threading.Thread(target=self.autoAnswer)
-            answer._args=(origen,)
             answer.start()
             self.changeState(constants.DIALING)
             return True

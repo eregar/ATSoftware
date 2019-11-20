@@ -1,5 +1,5 @@
 import tkinter
-from tkinter.messagebox import showinfo
+from tkinter import messagebox as mb,simpledialog as sd,filedialog as fd
 import time
 import constants
 import opener
@@ -13,10 +13,12 @@ telefonos=[]
 checkBoxes=[]
 
 app=tkinter.Tk(className="AT reciever")
-writeFrame=tkinter.Frame(app)
-comFrame=tkinter.Frame(app)
-telFrame=tkinter.Frame(app)
-chosen='3315528889'
+callWindow=tkinter.Frame(app)
+callWindow.pack()
+writeFrame=tkinter.Frame(callWindow)
+comFrame=tkinter.Frame(callWindow)
+telFrame=tkinter.Frame(callWindow)
+chosen=''
 
 def startPorts():
     connectb['state']='disabled'
@@ -36,16 +38,22 @@ def crossDial():
         half=puerto+len(temp)//2
         s=puertos[temp[puerto]].dial(telefonos[temp[half]].get(),__getSeconds())
         if s:
-            r=puertos[temp[half]].ans('3315528889')#va el entry
+            r=puertos[temp[half]].ans()#va el entry
             if not r:
                 puertos[temp[puerto]].hang(0)
             else:
                 print('calling back')
                 puertos[temp[half]].dial(telefonos[temp[puerto]].get(),__getSeconds())
-                puertos[temp[puerto]].ans('3315528889')#va el entry
+                puertos[temp[puerto]].ans()#va el entry
 
     if len(temp) % 2!=0:
+        global chosen
         indexsobrante=temp[-1]
+        if chosen=='':
+            setExtra()
+            if chosen=='':
+                chosen=sd.askstring(
+                    "hola","porfavor inserte un numero de telefono extra\n para recivir una llamada")
         puertos[indexsobrante].dial(chosen,__getSeconds())
     print('done')
 
@@ -60,7 +68,8 @@ def changeImei():
     msg2='no se pudieron cambiar los siguientes IMEI:\n'
     flag2=False
     flag=False
-    if opener.abrir(arch.get()):
+    h=fd.askopenfile(title="hola",filetypes=(('csv files','*.csv'),('text files','*.txt')))
+    if opener.readArchivo(h):
         for x in range(len(telefonos)):
             s=telefonos[x].get()
             if s!='':
@@ -73,11 +82,11 @@ def changeImei():
                     flag=True
                     msg+='COM%d: %s\n' %(puertos[x].comNumber,s)
         if flag:
-            showinfo(title='hola',message=msg)
+            mb.showinfo(title='hola',message=msg)
         if flag2:
-            showinfo(title='hola',message=msg2)
+            mb.showinfo(title='hola',message=msg2)
     else:
-        showinfo(title='hola',message='no se encontro el archivo')
+        mb.showinfo(title='hola',message='no se encontro el archivo')
 
 def setExtra():
     global chosen
@@ -90,10 +99,12 @@ def __getSeconds():
         x=int(segundos.get())
         return x
     except ValueError:
-        showinfo(title='hola',message='segundos no validos')
+        mb.showinfo(title='hola',message='segundos no validos')
         segundos.insert(0,'60')
         return 60
 
+def setDialFrame():
+    pass
 for port in constants.PORTNUMBERS:
     puertos.append(comClass.Com(port))
     statuses.append(tkinter.Label(master=comFrame,text=str(port)))
@@ -112,7 +123,7 @@ connectb.grid(row=0,column=1)
 
 writeFrame.grid(row=0,column=0,sticky=tkinter.N)
 comFrame.grid(row=0,column=1)
-telFrame.grid(row=0,column=2,sticky=tkinter.W)
+telFrame.grid(row=0,column=2,sticky=tkinter.S)
 const=1
 for boton in statuses:
     checkBoxes.append(0)
@@ -127,16 +138,16 @@ for boton in statuses:
     boton.grid(row=const,column=1,sticky=tkinter.W)
     const+=1
 
-tkinter.Button(master=comFrame,text='Dial',command= crossDial ).grid(
-    row=const,column=1)
-tkinter.Button(master=writeFrame,text='IMEI',command=changeImei).grid(row=11,column=0)
-arch=tkinter.Entry(master=writeFrame,width=20,bd=4)
-arch.grid(row=11,column=1)
+tkinter.Button(master=writeFrame,text='Dial',command= crossDial ).grid(
+    row=13,column=0)
+tkinter.Button(master=writeFrame,text='IMEI...',command=changeImei).grid(row=11,column=0)
+#arch=tkinter.Label(master=writeFrame,width=20,bd=4)
+#arch.grid(row=11,column=1)
 tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
 ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
 ch.grid(row=12,column=1)
-segundos=tkinter.Entry(master=comFrame,width=3,bd=4,)
-segundos.grid(row=0,column=0)
+segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
+segundos.grid(row=13,column=1)
 segundos.insert(0,'60')
 t.start()
 app.mainloop()
