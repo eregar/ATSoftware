@@ -15,20 +15,23 @@ class Com(object):
 
     def autoAnswer(self):
         self.candado.acquire()
+        print('%d voy a contestar' % self.comNumber)
         trt=1
         timeout=0
+        time.sleep(8)
         try:
-            while timeout<20:
+            while timeout<12:
                 bytesToRead=self.puerto.inWaiting()
                 if bytesToRead!=0:
-                    x=self.sendRead(b'','',bytesToRead)
+                    x=self.sendRead(bits=bytesToRead)
                     if 'RING' in x: 
                         self.sendRead(b'ATA\r\n','OK')
-                        startingTime=time.time()
+                        #startingTime=time.time()
                         print("%d contestando" %self.comNumber)
                         trt=0
                     elif 'CARRIER' in x:
-                        print('%d me colgo, dure %ds' %(self.comNumber,time.time()-startingTime))
+                        print("%d me colgo" %self.comNumber)
+                        #print('%d me colgo, dure %ds' %(self.comNumber,time.time()-startingTime))
                         break
                     else:
                         print(x)
@@ -37,10 +40,10 @@ class Com(object):
             if timeout>=20:
                 print('nadie llamo a',self.comNumber)
             self.changeState(constants.OK)
-        except serial.SerialException:
+        except serial.SerialException as e:
             self.puerto.close()
             self.changeState(constants.OFFLINE)
-            print('%d error contestando' %self.comNumber)
+            print('%d error contestando: %s' %(self.comNumber,str(e)))
         finally:
             self.candado.release()
     
@@ -48,6 +51,7 @@ class Com(object):
         if tiempo!=0:
             self.candado.acquire()
         try:
+            print('%d voy a llamar' % self.comNumber)
             if numero!='':
                 if('OK' in self.sendRead(b'ATD'+numero.encode("utf-8")+b';\r\n','OK')):
                     self.changeState(constants.DIALING)
@@ -78,6 +82,7 @@ class Com(object):
     def startSerial(self):
         try:
             self.puerto.close()
+            time.sleep(0.1)
             self.changeState(constants.OFFLINE)
             self.puerto=serial.Serial('COM'+str(self.comNumber),baudrate=constants.BAUDRATE,
                 timeout=constants.WAITINGTIME)

@@ -53,6 +53,7 @@ def crossDial():
             if not r:
                 puertos[temp[puerto]].hang(0)
             else:
+                time.sleep(1)
                 puertos[temp[half]].dial(telefonos[temp[puerto]].get().strip(),__getSeconds())
                 puertos[temp[puerto]].ans()#va el entry
 
