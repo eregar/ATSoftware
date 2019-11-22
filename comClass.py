@@ -17,7 +17,6 @@ class Com(object):
         self.candado.acquire()
         trt=1
         timeout=0
-        print('%d answering' % self.comNumber)
         try:
             while timeout<20:
                 bytesToRead=self.puerto.inWaiting()
@@ -25,27 +24,29 @@ class Com(object):
                     x=self.sendRead(b'','',bytesToRead)
                     if 'RING' in x: 
                         self.sendRead(b'ATA\r\n','OK')
+                        startingTime=time.time()
+                        print("%d contestando" %self.comNumber)
                         trt=0
                     elif 'CARRIER' in x:
-                        print('%d me colgo' %self.comNumber)
+                        print('%d me colgo, dure %ds' %(self.comNumber,time.time()-startingTime))
                         break
                     else:
                         print(x)
                 timeout+=trt
                 time.sleep(1)
-            if timeout==20:
+            if timeout>=20:
                 print('nadie llamo a',self.comNumber)
             self.changeState(constants.OK)
         except serial.SerialException:
             self.puerto.close()
             self.changeState(constants.OFFLINE)
+            print('%d error contestando' %self.comNumber)
         finally:
             self.candado.release()
     
     def hang(self,tiempo,numero=''):
         if tiempo!=0:
             self.candado.acquire()
-            print('%d calling' % self.comNumber)
         try:
             if numero!='':
                 if('OK' in self.sendRead(b'ATD'+numero.encode("utf-8")+b';\r\n','OK')):
@@ -57,12 +58,13 @@ class Com(object):
         except serial.SerialException:
             self.puerto.close()
             self.changeState(constants.OFFLINE)
+            print('%d error llamando' %self.comNumber)
+
         finally:
             if tiempo!=0:
                 self.candado.release()
 
     def ans(self):
-        print(self.comNumber,"yo voy a contestar")
         if self.status!=constants.DIALING:
             self.startSerial()
         if self.status==constants.OK or self.status==constants.DIALING:
@@ -72,10 +74,6 @@ class Com(object):
             return True
         else:
             return False
-    
-    def zoneSerial(self):
-        x=threading.Thread(target=self.startSerial,daemon=True)
-        x.start()
 
     def startSerial(self):
         try:
@@ -92,7 +90,6 @@ class Com(object):
     def dial(self,numero: str,seconds: int):
         self.startSerial()
         if self.status==constants.OK:
-            print('%d done waiting' % self.comNumber)
             self.changeState(constants.DIALING)
             calling=threading.Thread(target=self.hang,args=(60,numero))
             calling._args=(seconds+10,numero)
@@ -130,7 +127,9 @@ class Com(object):
     
     def getIMEI(self):
         self.startSerial()
-        print(self.sendRead(b'AT+CGSN\r\n'))
+        result=self.sendRead(b'AT+CGSN\r\n')
+        if 'OK' in result:
+            return result[6:21]
 
     def setIMEI(self,imei: str):
         self.startSerial()
