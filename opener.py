@@ -38,7 +38,6 @@ def buscar(numero: str):
     imeiC=0
     numberC=1
     muestra=archivo[0].split(',')
-    print(type(muestra))
     if ('IMEI' in muestra[0].upper() or len(muestra[0])==15):
         imeiC=0
         numberC=1

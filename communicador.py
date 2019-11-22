@@ -143,7 +143,6 @@ def changeNumbers():
     h=fd.askopenfile(title="DEBEN DE ESTAR EN ORDEN",filetypes=(('csv files','*.csv'),('text files','*.txt')))
     if opener.readArchivo(h):
         numb=opener.listNumbers()
-        print(numb)
         for x in range(len(numb)):
             telefonos[x].delete(0,tkinter.END)
             telefonos[x].insert(0,numb[x])
