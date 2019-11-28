@@ -1,5 +1,7 @@
 archivo=""
-
+IMEI=1
+NUMERO=2
+CCID=3
 
 def abrir(arch: str):
     global archivo
@@ -33,25 +35,27 @@ def listNumbers():
                 continue
     return res
 
-def buscar(numero: str):
+
+def buscar(ccid: str):
     global archivo
     imeiC=0
     numberC=1
-    muestra=archivo[0].split(',')
-    if ('IMEI' in muestra[0].upper() or len(muestra[0])==15):
-        imeiC=0
-        numberC=1
-    elif('IMEI' in muestra[1].upper() or len(muestra[1])==15):
-        numberC=0
-        imeiC=1
+    ccidC=2
 
     for l in archivo:
         l=l.split(',')
-        if numero in l[numberC]:
-            if len(l[imeiC])==15:
-                return l[imeiC]
-            else:
+        if len(l)!=3:
+            print("numero incorrecto de columnas, se necesita IMEI,NUMERO,CCID")
+            return (None,None)
+        if ccid in l[ccidC]:
+            if len(l[imeiC])!=15:
                 print("un imei no es del tamanio suficiente")
-                return '0'
-    return '0'
+                return (None,None)
+            if len(l[numberC])!=10:
+                print("un numero no es del tamanio correcto")
+                return (None,None)
+
+            return (l[numberC],l[imeiC])
+
+    return (None,None)
 

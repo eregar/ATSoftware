@@ -93,8 +93,9 @@ class Com(object):
                 self.changeState(constants.OK)
 
     def dial(self,numero: str,seconds: int):
-        self.startSerial()
-        if self.status==constants.OK:
+        if self.status!=constants.DIALING:
+            self.startSerial()
+        if self.status==constants.OK or self.status==constants.DIALING:
             self.changeState(constants.DIALING)
             calling=threading.Thread(target=self.hang,args=(60,numero))
             calling._args=(seconds+10,numero)
@@ -134,6 +135,7 @@ class Com(object):
         self.startSerial()
         result=self.sendRead(b'AT+CGSN\r\n')
         if 'OK' in result:
+            #TRUENA CON UN RING
             return result[6:21]
 
     def setIMEI(self,imei: str):
@@ -143,6 +145,24 @@ class Com(object):
                 return True
             else:
                 return False
+    
+    def getCCID(self):
+        self.startSerial()
+        result=self.sendRead(b'AT+CCID\r\n')
+        if 'OK' in result:
+            res=""
+            flag=False
+            for x in result:
+                if x=='"':
+                    flag = not flag 
+                elif flag:
+                    res+=x
+                elif res!="":
+                    break
+            return res
+        else:
+            return None
+
     
     def sendRead(self,msg=b'',expected='',bits=0):
         self.reading.acquire()

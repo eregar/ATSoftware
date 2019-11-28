@@ -10,12 +10,13 @@ import threading
 puertos=[]
 statuses=[]
 imeis=[]
+ccids=[]
 telefonos=[]
 checkBoxes=[]
 
 app=tkinter.Tk(className="AT reciever")
 callWindow=tkinter.Frame(app)
-callWindow.pack()
+menu=tkinter.Frame(app)
 writeFrame=tkinter.Frame(callWindow)
 comFrame=tkinter.Frame(callWindow)
 telFrame=tkinter.Frame(callWindow)
@@ -28,7 +29,7 @@ def startPorts():
 
 def __getIMEIS():
     for puerto in range(len(puertos)):
-        if puertos[puerto].status=='OK':
+        if puertos[puerto].status==constants.OK:
             imeis[puerto]['text']=puertos[puerto].getIMEI()
 
 def __zoneSerial():
@@ -39,6 +40,7 @@ def __zoneSerial():
         for th in threads:
             th.join()
         __getIMEIS()
+        __getCCIDs()
     
 def crossDial():
     temp=[]  
@@ -110,28 +112,40 @@ def blockButtons():
 
 def unblockButtons():
     pass
-    
+
+def __getCCIDs():
+    for puerto in range(len(puertos)):
+        if puertos[puerto].status==constants.OK:
+            ccids[puerto]['text']=puertos[puerto].getCCID()
+
 
 def changeImei():
-    msg='no se encontraron los siguientes numeros:\n'
+    msg='no se encontraron los siguientes CCIDs:\n'
     msg2='no se pudieron cambiar los siguientes IMEI:\n'
     flag2=False
     flag=False
     h=fd.askopenfile(title="hola",filetypes=(('csv files','*.csv'),('text files','*.txt')))
     if opener.readArchivo(h):
-        for x in range(len(telefonos)):
-            s=telefonos[x].get().strip()
-            if s!='':
-                ans=opener.buscar(telefonos[x].get().strip())
-                if ans!='0':
-                    if not puertos[x].setIMEI(ans):
-                        flag2=True
-                        print("no encontro imei")
-                        msg2+='COM%d: %s\n' %(puertos[x].comNumber,s)
-                else:
-                    flag=True
-                    print("no encontro numero")
-                    msg+='COM%d: %s\n' %(puertos[x].comNumber,s)
+        for x in range(len(puertos)):
+            if puertos[x].status==constants.OK:
+                s=puertos[x].getCCID()
+                if s is not None:
+                    numero,imei=opener.buscar(s)
+                    if (imei is not None) and (numero is not None) :
+                        if not puertos[x].setIMEI(imei):
+                            flag2=True
+                            print("no cambio imei")
+                            msg2+='COM%d: %s\n' %(puertos[x].comNumber,s)
+                        else:
+                            telefonos[x]['state']='normal'
+                            telefonos[x].delete(0,tkinter.END)
+                            telefonos[x].insert(0,numero)
+                            telefonos[x]['state']='disabled'
+                    else:
+                        flag=True
+                        print("no encontro numero")
+                        msg+='COM%d: %s\n' %(puertos[x].comNumber,s)
+                
         if flag:
             mb.showinfo(title='hola',message=msg)
         if flag2:
@@ -165,29 +179,40 @@ def __getSeconds():
         segundos.insert(0,'60')
         return 60
 
-def setDialFrame():
-    pass
+def setFrame(frameNo : int):
+    if frameNo==1:
+        telFrame.grid(row=0,column=2,sticky=tkinter.S)
+        writeFrame.grid(row=0,column=0,sticky=tkinter.N)
+        #everything else has to forget
+
+
 
 #AT+CMGF
 #AT+CMGR=INDEX
 #AT+CPMS="SM"
 #AT + EGMR = 1, 7, "your imei number here"
 #AT+CGSN IMEI
+#AT+CUSD=1,"#999#",15
 
 #listas necesarias
 for port in constants.PORTNUMBERS:
     puertos.append(comClass.Com(port))
     statuses.append(tkinter.Label(master=comFrame,text=str(port)))
     imeis.append(tkinter.Label(master=comFrame,width=15))
+    ccids.append(tkinter.Label(master=comFrame,width=20))
+
 
 cuadro=tkinter.Text(writeFrame,width=50,height=10)
 cuadro.grid(row=0,column=0,sticky=tkinter.N,columnspan=2,rowspan=10)
 connectb=tkinter.Button(master=comFrame,text='connect',command= startPorts )
 connectb.grid(row=0,column=1)
 
-writeFrame.grid(row=0,column=0,sticky=tkinter.N)
+menu.pack(expand=True)
+tkinter.Button(menu,text="DIALS",width=10).pack(side=tkinter.LEFT)
+tkinter.Button(menu,text="MESSAGES").pack(side=tkinter.LEFT)
+callWindow.pack(side=tkinter.BOTTOM)
 comFrame.grid(row=0,column=1)
-telFrame.grid(row=0,column=2,sticky=tkinter.S)
+setFrame(1)
 const=1
 for boton in statuses:
     checkBoxes.append(0)
@@ -195,26 +220,33 @@ for boton in statuses:
     tkinter.Checkbutton(master=comFrame,text='COM'+boton['text'],height=1
         ,variable=checkBoxes[const-1],onvalue=1,offvalue=0).grid(row=const,column=0,sticky=tkinter.W)
     imeis[const-1].grid(row=const,column=3)
-    telefonos.append(tkinter.Entry(master=telFrame,width=10,bd=4))
+    ccids[const-1].grid(row=const,column=4)
+
+    telefonos.append(tkinter.Entry(master=telFrame,width=10,bd=4,state="disabled"))
     telefonos[const-1].grid(row=const,column=2,sticky=tkinter.W)
 
     boton['text']=puertos[0].status
     boton.grid(row=const,column=1,sticky=tkinter.W)
     const+=1
-tkinter.Button(master=telFrame,text='Numeros..',command=changeNumbers).grid(row=0,column=2)
+#tkinter.Button(master=telFrame,text='Numeros..',command=changeNumbers).grid(row=0,column=2)
+
 tkinter.Button(master=writeFrame,text='Dial',command= crossDial ).grid(
     row=13,column=0)
-tkinter.Button(master=writeFrame,text='changeIMEI..',command=changeImei).grid(row=11,column=0)
-tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
+tkinter.Button(master=writeFrame,text='Open database..',command=changeImei).grid(row=11,column=0)
 tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
-tkinter.Label(master=comFrame,text='IMEI').grid(row=0,column=3)
 ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
 ch.grid(row=12,column=1)
 segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
 segundos.grid(row=13,column=1)
 segundos.insert(0,'60')
 
+tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
+tkinter.Label(master=comFrame,text='IMEI').grid(row=0,column=3)
+tkinter.Label(master=comFrame,text='CCID').grid(row=0,column=4)
+
+
+
 t=threading.Thread(target=constantCheck,daemon=True)
 t.start()
-app.mainloop()
 
+app.mainloop()
