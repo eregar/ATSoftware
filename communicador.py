@@ -20,6 +20,10 @@ menu=tkinter.Frame(app)
 writeFrame=tkinter.Frame(callWindow)
 comFrame=tkinter.Frame(callWindow)
 telFrame=tkinter.Frame(callWindow)
+msgFrame=tkinter.Frame(callWindow)
+rcvFrame=tkinter.Frame(callWindow)
+#frame para message box, entry de destinatario, boton de mandar mensaje
+#frame para ver mensajes recividos
 chosen=''
 
 def startPorts():
@@ -107,12 +111,6 @@ def __askForNumber(titulo='hola',asunto='inserte un numero'):
             pass
     return res.strip()
 
-def blockButtons():
-    pass
-
-def unblockButtons():
-    pass
-
 def __getCCIDs():
     for puerto in range(len(puertos)):
         if puertos[puerto].status==constants.OK:
@@ -137,10 +135,10 @@ def changeImei():
                             print("no cambio imei")
                             msg2+='COM%d: %s\n' %(puertos[x].comNumber,s)
                         else:
-                            telefonos[x]['state']='normal'
+                            #telefonos[x]['state']='normal'
                             telefonos[x].delete(0,tkinter.END)
                             telefonos[x].insert(0,numero)
-                            telefonos[x]['state']='disabled'
+                            #telefonos[x]['state']='disabled'
                     else:
                         flag=True
                         print("no encontro numero")
@@ -181,9 +179,17 @@ def __getSeconds():
 
 def setFrame(frameNo : int):
     if frameNo==1:
+        print("cambiando a calling")
         telFrame.grid(row=0,column=2,sticky=tkinter.S)
         writeFrame.grid(row=0,column=0,sticky=tkinter.N)
-        #everything else has to forget
+        msgFrame.grid_forget()
+        rcvFrame.grid_forget()
+    elif frameNo==2:
+        print("cambiando a messaging")
+        telFrame.grid_forget()
+        writeFrame.grid_forget()
+        msgFrame.grid(row=0,column=0,sticky=tkinter.N)
+        rcvFrame.grid(row=0,column=2,sticky=tkinter.S)
 
 
 
@@ -202,14 +208,14 @@ for port in constants.PORTNUMBERS:
     ccids.append(tkinter.Label(master=comFrame,width=20))
 
 
-cuadro=tkinter.Text(writeFrame,width=50,height=10)
+cuadro=tkinter.Text(msgFrame,width=50,height=10)
 cuadro.grid(row=0,column=0,sticky=tkinter.N,columnspan=2,rowspan=10)
 connectb=tkinter.Button(master=comFrame,text='connect',command= startPorts )
 connectb.grid(row=0,column=1)
 
-menu.pack(expand=True)
-tkinter.Button(menu,text="DIALS",width=10).pack(side=tkinter.LEFT)
-tkinter.Button(menu,text="MESSAGES").pack(side=tkinter.LEFT)
+menu.pack()
+tkinter.Button(menu,text="CALLING",command=lambda: setFrame(1)).pack(side=tkinter.LEFT)
+tkinter.Button(menu,text="MESSAGING",command=lambda: setFrame(2)).pack(side=tkinter.LEFT)
 callWindow.pack(side=tkinter.BOTTOM)
 comFrame.grid(row=0,column=1)
 setFrame(1)
@@ -222,17 +228,16 @@ for boton in statuses:
     imeis[const-1].grid(row=const,column=3)
     ccids[const-1].grid(row=const,column=4)
 
-    telefonos.append(tkinter.Entry(master=telFrame,width=10,bd=4,state="disabled"))
+    telefonos.append(tkinter.Entry(master=telFrame,width=10,bd=4))#,state="disabled"))
     telefonos[const-1].grid(row=const,column=2,sticky=tkinter.W)
 
     boton['text']=puertos[0].status
     boton.grid(row=const,column=1,sticky=tkinter.W)
     const+=1
-#tkinter.Button(master=telFrame,text='Numeros..',command=changeNumbers).grid(row=0,column=2)
 
 tkinter.Button(master=writeFrame,text='Dial',command= crossDial ).grid(
     row=13,column=0)
-tkinter.Button(master=writeFrame,text='Open database..',command=changeImei).grid(row=11,column=0)
+tkinter.Button(master=writeFrame,text='Set from database..',command=changeImei).grid(row=11,column=0)
 tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
 ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
 ch.grid(row=12,column=1)

@@ -20,24 +20,25 @@ class Com(object):
         timeout=0
         time.sleep(8)
         try:
+            startingTime=0
             while timeout<12:
                 bytesToRead=self.puerto.inWaiting()
                 if bytesToRead!=0:
                     x=self.sendRead(bits=bytesToRead)
                     if 'RING' in x: 
                         self.sendRead(b'ATA\r\n','OK')
-                        #startingTime=time.time()
+                        startingTime=time.time()
                         print("%d contestando" %self.comNumber)
                         trt=0
                     elif 'CARRIER' in x:
-                        print("%d me colgo" %self.comNumber)
-                        #print('%d me colgo, dure %ds' %(self.comNumber,time.time()-startingTime))
+                        print('%d me colgo, duracion: %dseg' %(self.comNumber,time.time()-startingTime))
                         break
                     else:
-                        print(x)
+                        print(self.comNumber,x)
                 timeout+=trt
                 time.sleep(1)
-            if timeout>=20:
+            print(timeout)
+            if timeout>=12:
                 print('nadie llamo a',self.comNumber)
             self.changeState(constants.OK)
         except serial.SerialException as e:
