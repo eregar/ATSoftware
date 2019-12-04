@@ -180,18 +180,29 @@ def __getSeconds():
 def setFrame(frameNo : int):
     if frameNo==1:
         print("cambiando a calling")
-        telFrame.grid(row=0,column=2,sticky=tkinter.S)
-        writeFrame.grid(row=0,column=0,sticky=tkinter.N)
-        msgFrame.grid_forget()
-        rcvFrame.grid_forget()
+        rcvFrame.forget()
+        msgFrame.forget()
+        comFrame.forget()
+        #telFrame.grid(row=0,column=2,sticky=tkinter.S)
+        telFrame.pack(side=tkinter.RIGHT,expand=1,fill=tkinter.BOTH)
+        comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
+        writeFrame.pack(side=tkinter.LEFT,expand=1,fill=tkinter.BOTH)
+
+        #writeFrame.grid(row=0,column=0,sticky=tkinter.N)
+        #msgFrame.grid_forget()
+        #rcvFrame.grid_forget()
     elif frameNo==2:
         print("cambiando a messaging")
-        telFrame.grid_forget()
-        writeFrame.grid_forget()
-        msgFrame.grid(row=0,column=0,sticky=tkinter.N)
-        rcvFrame.grid(row=0,column=2,sticky=tkinter.S)
+        telFrame.forget()
+        writeFrame.forget()
+        comFrame.forget()
+        #msgFrame.grid(row=0,column=0,sticky=tkinter.N)
+        msgFrame.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=1)
+        comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1)
+        #rcvFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1)
+        #rcvFrame.grid(row=0,column=2,sticky=tkinter.S)
 
-
+#max 160 char
 
 #AT+CMGF
 #AT+CMGR=INDEX
@@ -209,15 +220,15 @@ for port in constants.PORTNUMBERS:
 
 
 cuadro=tkinter.Text(msgFrame,width=50,height=10)
-cuadro.grid(row=0,column=0,sticky=tkinter.N,columnspan=2,rowspan=10)
+cuadro.grid(row=1,column=0,sticky=tkinter.N,columnspan=2,rowspan=10)
 connectb=tkinter.Button(master=comFrame,text='connect',command= startPorts )
 connectb.grid(row=0,column=1)
 
 menu.pack()
 tkinter.Button(menu,text="CALLING",command=lambda: setFrame(1)).pack(side=tkinter.LEFT)
 tkinter.Button(menu,text="MESSAGING",command=lambda: setFrame(2)).pack(side=tkinter.LEFT)
-callWindow.pack(side=tkinter.BOTTOM)
-comFrame.grid(row=0,column=1)
+
+callWindow.pack(side=tkinter.TOP,fill=tkinter.BOTH,expand=1)
 setFrame(1)
 const=1
 for boton in statuses:
@@ -229,7 +240,7 @@ for boton in statuses:
     ccids[const-1].grid(row=const,column=4)
 
     telefonos.append(tkinter.Entry(master=telFrame,width=10,bd=4))#,state="disabled"))
-    telefonos[const-1].grid(row=const,column=2,sticky=tkinter.W)
+    telefonos[const-1].grid(row=const,column=0,sticky=tkinter.W)
 
     boton['text']=puertos[0].status
     boton.grid(row=const,column=1,sticky=tkinter.W)
@@ -248,8 +259,15 @@ segundos.insert(0,'60')
 tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
 tkinter.Label(master=comFrame,text='IMEI').grid(row=0,column=3)
 tkinter.Label(master=comFrame,text='CCID').grid(row=0,column=4)
+tkinter.Label(master=telFrame,text='Numero').grid(row=0,column=0)
 
 
+tkinter.Button(master=msgFrame,text='add+').grid(row=0,column=1)
+tkinter.Button(master=msgFrame,text='sendAll')
+tkinter.Label(master=msgFrame,text='Address').grid(row=0,column=0)
+reciever=tkinter.Entry(master=msgFrame,width=40,bd=4)
+reciever.grid(row=0,column=1)
+#tkinter list of messages to send
 
 t=threading.Thread(target=constantCheck,daemon=True)
 t.start()
