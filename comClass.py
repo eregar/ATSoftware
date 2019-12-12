@@ -161,7 +161,7 @@ class Com(object):
                     res+=x
                 elif res!="":
                     break
-            return res
+            return res[:-1]
         else:
             return None
 
