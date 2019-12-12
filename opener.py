@@ -48,12 +48,12 @@ def buscar(ccid: str):
             print("numero incorrecto de columnas, se necesita IMEI,NUMERO,CCID")
             return (None,None)
         if ccid in l[ccidC]:
-            if len(l[imeiC])!=15:
-                print("un imei no es del tamanio suficiente")
-                return (None,None)
             if len(l[numberC])!=10:
                 print("un numero no es del tamanio correcto")
                 return (None,None)
+            if len(l[imeiC])!=15:
+                print("Warning: un imei no es del tamanio suficiente")
+                return(l[numberC],None)
 
             return (l[numberC],l[imeiC])
 

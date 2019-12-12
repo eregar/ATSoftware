@@ -121,13 +121,14 @@ class Com(object):
                 byteNumber=self.puerto.inWaiting()
                 if byteNumber!=0:
                     buffer+=str(self.puerto.read(byteNumber))
-                if'OK' in buffer:
+                if 'OK' in buffer:
                     break
                 timeout+=1
                 time.sleep(1)
             if buffer=='':
-                self.changeState(constants.OFFLINE)
-                self.puerto.close()
+                print('%d didnt respond'%self.comNumber)
+                #self.changeState(constants.OFFLINE)
+                #self.puerto.close()
             return buffer
         else:
             return self.puerto.read(byteNumber)
@@ -164,6 +165,32 @@ class Com(object):
         else:
             return None
 
+    def sendSMS(self,destino:str,contenido:str):
+        if self.status==constants.OK:
+            self.startSerial()
+        if self.status==constants.OK:
+            self.sendRead(b'AT+CMGF=1','OK')
+            self.sendRead(b'AT+CPMS="SM"','OK')
+            self.sendRead(b'AT+CMGS="'+destino.encode('utf-8')+b'"','>')
+            result=self.sendRead(contenido.encode('utf-8'))
+            if 'OK' in result:
+                #find ':' +2 espacios=numero de mensaje
+                print(result)
+            else:
+                print('no ok',result)
+
+    def getSMS(self):
+        if self.status==constants.OK:
+            self.startSerial()
+        if self.status==constants.OK:
+            self.sendRead(b'AT+CMGF=1','OK')
+            self.sendRead(b'AT+CPMS="SM"','OK')
+            result=self.sendRead(b'AT+CMGL="ALL"')
+            if 'OK' in result:
+                return result
+            else:
+                print('fasho')
+                return result
     
     def sendRead(self,msg=b'',expected='',bits=0):
         self.reading.acquire()

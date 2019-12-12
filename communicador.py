@@ -5,6 +5,7 @@ import constants
 import opener
 import comClass
 import threading
+import mensaje
 
 #variables globales
 puertos=[]
@@ -13,6 +14,7 @@ imeis=[]
 ccids=[]
 telefonos=[]
 checkBoxes=[]
+messageList=[]
 
 app=tkinter.Tk(className="AT reciever")
 callWindow=tkinter.Frame(app)
@@ -129,16 +131,18 @@ def changeImei():
                 s=puertos[x].getCCID()
                 if s is not None:
                     numero,imei=opener.buscar(s)
-                    if (imei is not None) and (numero is not None) :
-                        if not puertos[x].setIMEI(imei):
-                            flag2=True
-                            print("no cambio imei")
-                            msg2+='COM%d: %s\n' %(puertos[x].comNumber,s)
+                    if (numero is not None) :
+                        if (imei is not None):
+                            if not puertos[x].setIMEI(imei):
+                                flag2=True
+                                print("no cambio imei")
+                                msg2+='COM%d: %s\n' %(puertos[x].comNumber,s)
+                            else:
+                                telefonos[x].delete(0,tkinter.END)
+                                telefonos[x].insert(0,numero)
                         else:
-                            #telefonos[x]['state']='normal'
                             telefonos[x].delete(0,tkinter.END)
                             telefonos[x].insert(0,numero)
-                            #telefonos[x]['state']='disabled'
                     else:
                         flag=True
                         print("no encontro numero")
@@ -179,7 +183,6 @@ def __getSeconds():
 
 def setFrame(frameNo : int):
     if frameNo==1:
-        print("cambiando a calling")
         rcvFrame.forget()
         msgFrame.forget()
         comFrame.forget()
@@ -187,29 +190,37 @@ def setFrame(frameNo : int):
         telFrame.pack(side=tkinter.RIGHT,expand=1,fill=tkinter.BOTH)
         comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
         writeFrame.pack(side=tkinter.LEFT,expand=1,fill=tkinter.BOTH)
-
-        #writeFrame.grid(row=0,column=0,sticky=tkinter.N)
-        #msgFrame.grid_forget()
-        #rcvFrame.grid_forget()
     elif frameNo==2:
-        print("cambiando a messaging")
         telFrame.forget()
         writeFrame.forget()
         comFrame.forget()
         #msgFrame.grid(row=0,column=0,sticky=tkinter.N)
         msgFrame.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=1)
-        comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1)
-        #rcvFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1)
-        #rcvFrame.grid(row=0,column=2,sticky=tkinter.S)
+        comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
+
+def sendMessages():
+    temp=[]  
+    comCounter=0
+    for x in range(len(checkBoxes)):
+        if checkBoxes[x].get()!=0:
+            temp.append(x)
+    if len(temp)>0:
+        for x in mensajes.curselection():
+            #messagelist[x]
+            print('msg',mensajes.get(x),'to com',puertos[temp[comCounter]].comNumber)
+            #send the message (thread?)
+            comCounter= (comCounter+1) % len(temp)
 
 #max 160 char
-
 #AT+CMGF
+#AT+CMGR=2
+#AT+CMGL="ALL"
 #AT+CMGR=INDEX
 #AT+CPMS="SM"
 #AT + EGMR = 1, 7, "your imei number here"
 #AT+CGSN IMEI
 #AT+CUSD=1,"#999#",15
+
 
 #listas necesarias
 for port in constants.PORTNUMBERS:
@@ -219,7 +230,7 @@ for port in constants.PORTNUMBERS:
     ccids.append(tkinter.Label(master=comFrame,width=20))
 
 
-cuadro=tkinter.Text(msgFrame,width=50,height=10)
+cuadro=tkinter.Text(msgFrame,width=50,height=10,bd=4)
 cuadro.grid(row=1,column=0,sticky=tkinter.N,columnspan=2,rowspan=10)
 connectb=tkinter.Button(master=comFrame,text='connect',command= startPorts )
 connectb.grid(row=0,column=1)
@@ -263,12 +274,24 @@ tkinter.Label(master=telFrame,text='Numero').grid(row=0,column=0)
 
 
 tkinter.Button(master=msgFrame,text='add+').grid(row=0,column=1)
-tkinter.Button(master=msgFrame,text='sendAll')
-tkinter.Label(master=msgFrame,text='Address').grid(row=0,column=0)
-reciever=tkinter.Entry(master=msgFrame,width=40,bd=4)
-reciever.grid(row=0,column=1)
-#tkinter list of messages to send
+tkinter.Label(master=msgFrame,text='Address:').grid(row=0,column=0)
+destino=tkinter.Entry(master=msgFrame,width=40,bd=4)
+destino.grid(row=0,column=1)
 
+cajon=tkinter.Frame(msgFrame)
+cajon.grid(row=11,column=0,columnspan=2,rowspan=5,pady=10)
+scroll=tkinter.Scrollbar(cajon)
+scroll.pack(side=tkinter.RIGHT,fill=tkinter.Y)
+mensajes=tkinter.Listbox(master=cajon,yscrollcommand=scroll.set,width=60,selectmode=tkinter.EXTENDED)
+scroll.config(command=mensajes.yview)
+mensajes.pack(side=tkinter.LEFT,fill=tkinter.BOTH)
+#tkinter list of messages to send
+tkinter.Button(master=msgFrame,text='SEND',padx=10,pady=10,command=sendMessages).grid(row=16,column=0)
+tkinter.Button(master=msgFrame,text='CLONE',pady=5).grid(row=12,column=3)
+tkinter.Button(master=msgFrame,text='DELETE X',pady=5).grid(row=13,column=3)
+
+for x in range(30):
+    mensajes.insert(tkinter.END,'hola'*(x%3))
 t=threading.Thread(target=constantCheck,daemon=True)
 t.start()
 
