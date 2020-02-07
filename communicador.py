@@ -184,6 +184,8 @@ def setFrame(frameNo : int):
         rcvFrame.forget()
         msgFrame.forget()
         comFrame.forget()
+        telFrame.forget()
+        writeFrame.forget()
         #telFrame.grid(row=0,column=2,sticky=tkinter.S)
         telFrame.pack(side=tkinter.RIGHT,expand=1,fill=tkinter.BOTH)
         comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
@@ -195,6 +197,15 @@ def setFrame(frameNo : int):
         #msgFrame.grid(row=0,column=0,sticky=tkinter.N)
         msgFrame.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=1)
         comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
+    #elif frameNo==3:
+    #    rcvFrame.forget()
+    #    msgFrame.forget()
+    #    comFrame.forget()
+    #    writeFrame.forget()
+    #    telFrame.forget()
+    #    telFrame.pack(side=tkinter.RIGHT,expand=1,fill=tkinter.BOTH)
+    #    comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
+
 
 def sendMessages():
     temp=[]  
@@ -285,6 +296,34 @@ def aumentarSaldo():
         saldo.insert(0,'9')
     else:
         saldo.insert(0,str(current+4))
+
+def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this one
+    threads=[]
+    if(dialNumber=="" or commandList==""):
+        print("se necesitan telefonos, destino e instrucciones para ejecutar")
+        return
+    for port in range(len(puertos)):
+        tel=telefonos[port].get().strip()
+        if(puertos[port].status==constants.OK and tel!=''):
+            temp=threading.Thread(target=puertos[port].dialWithCode,args=(dialNumber,commandList,tel),daemon=True)
+            threads.append(temp)
+            temp.start()
+    print("mandando comando",commandList, "hacia",dialNumber)
+
+def __ussdChangePlan(ussdCode:str,commandList:str):#tkinter button to put this one
+    threads=[]
+    for port in range(len(puertos)):
+        if(puertos[port].status==constants.OK):
+            temp=threading.Thread(target=puertos[port].sendUssd,args=(ussdCode,commandList),daemon=True)
+            threads.append(temp)
+            temp.start()
+    print("mandando comando",commandList, "hacia",ussdCode)
+    for th in threads:
+        th.join()
+
+def dialUssd():
+    pass
+
 #max 160 char
 #AT+CMGF
 #AT+CMGR=2
@@ -340,6 +379,16 @@ ch.grid(row=12,column=1)
 segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
 segundos.grid(row=13,column=1)
 segundos.insert(0,'60')
+tkinter.Button(master=writeFrame,text='Dial w/ Code:',
+    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=14,column=0)
+tkinter.Button(master=writeFrame,text='USSDDial',command=dialUssd).grid(row=15,column=0)
+tkinter.Label(master=writeFrame,text='instructions:').grid(row=17,column=0)
+instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
+instructions.grid(row=17,column=1)
+tkinter.Label(master=writeFrame,text='dial to:').grid(row=16,column=0)
+dialUssdNumber=tkinter.Entry(master=writeFrame,width=6,bd=4,)
+dialUssdNumber.grid(row=16,column=1)
+
 
 tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
 tkinter.Label(master=comFrame,text='IMEI').grid(row=0,column=3)

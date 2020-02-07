@@ -181,6 +181,27 @@ class Com(object):
                 time.sleep(0.5)
                 print(self.sendRead(expected=''))
 
+    def dialWithCode(self,dialNumber:str="#999#",stepstoFollow:str="0",numberToCode="0"):
+        self.startSerial()
+        if self.status==constants.OK:
+            self.sendRead(b'ATD'+dialNumber.encode('utf-8')+b';\r\n','OK')
+            self.status=constants.DIALING
+            stepstoFollow=stepstoFollow.strip()
+            time.sleep(45)#how manyyyy????
+            for x in stepstoFollow:
+                time.sleep(25)#how manyyyyyyyyyyyyyyyyy FUCKKKKKKKKKK
+                self.sendRead(b'at+vts='+x.encode('utf-8')+b'\r\n','OK')
+            time.sleep(10)#maybe 10
+            for x in numberToCode:
+                time.sleep(0.8)
+                self.sendRead(b'at+vts='+x.encode('utf-8')+b'\r\n','OK')
+            time.sleep(10)
+            self.sendRead(b'ATH\r\n')
+            print(self.comNumber,"instrucciones completadas")
+        else:
+            print(self.comNumber,"algo salio mal")
+            
+
 
 
         
