@@ -15,6 +15,7 @@ ccids=[]
 telefonos=[]
 checkBoxes=[]
 messageList=[]
+reversa=False
 
 app=tkinter.Tk(className="AT reciever")
 callWindow=tkinter.Frame(app)
@@ -51,7 +52,7 @@ def __zoneSerial():
 def crossDial():
     temp=[]  
     for x in range(len(checkBoxes)):
-        if checkBoxes[x].get()!=0 and telefonos[x].get()!='':
+        if checkBoxes[x].get()!=0 and telefonos[x].get()!='': #aqui
             temp.append(x)
     for puerto in range(len(temp)//2):
         half=puerto+len(temp)//2
@@ -107,11 +108,8 @@ def __askForNumber(titulo='hola',asunto='inserte un numero'):
         res=sd.askstring(titulo,asunto)
         if res is None:
             return ''
-        try:
-            int(res.strip())
-        except:
-            pass
     return res.strip()
+
 
 def __getCCIDs():
     for puerto in range(len(puertos)):
@@ -210,7 +208,83 @@ def sendMessages():
             print('msg',mensajes.get(x),'to com',puertos[temp[comCounter]].comNumber)
             #send the message (thread?)
             comCounter= (comCounter+1) % len(temp)
+#AGREGADO
+def rcvMessages():
+    temp=[]
+    for x in range(len(checkBoxes)):
+        if checkBoxes[x].get()!=0:
+            temp.append(x)
+    for puerto in range(len(temp)):
+        mensajes=puertos[temp[puerto]].getSMS().split('+CMGL:')
+        for men in mensajes:
+            if "PASA TIEMPO" in men: #REC
+                print(men)
+#AGREGADO
+def __threadmandarMSG(puerto, destinatario :str, contenido :str):
+    puerto.sendSMS(destinatario,contenido)
+    
+def __threadrecibirMSG():
+    pass
 
+def reverse():
+    global reversa,reversaso1,reversaso2
+    if reversa:
+        reversaso1['state']='disabled'
+        reversaso2['state']='normal'
+        reversa=False
+    else:
+        reversaso1['state']='normal'
+        reversaso2['state']='disabled'
+        reversa=True
+
+def pasarSaldos():
+    temp=[]  
+    global reversa
+    if reversa:
+        for x in range(len(checkBoxes),0,-1):
+            if checkBoxes[x-1].get()!=0:
+                temp.append(x-1)
+    else:
+        for x in range(len(checkBoxes)):
+            if checkBoxes[x].get()!=0:
+                temp.append(x)
+    if len(temp)>0 and len(temp)%2==0:
+        res=mb.askyesno(title='hola',message='son '+str(len(temp)//2)+", empezando por pos "+str(temp[0])+"\ncontinuar?")
+        if res:
+            threads=[]
+            for puerto in range(len(temp)//2):
+                half=puerto+len(temp)//2
+                threads.append(threading.Thread(
+                    target=__threadmandarMSG,args=(puertos[temp[puerto]],"7373",telefonos[temp[half]].get()+" "+saldo.get())
+                    ,daemon=True))
+                threads[puerto].start()
+            for t in threads:
+                t.join(timeout=10)
+            if saldo.get()=="9":
+                print("dumping")
+                for puerto in range(len(temp)//2):
+                    puertos[temp[puerto]].sendSMS("7373",constants.DUMPNUMBERS[puerto]+" 23")
+            aumentarSaldo()
+            reverse()
+            res=mb.askyesno(title='hola',message='termino de pasar, mandar mensaje?')
+            if res:
+                threads=[]
+                for puerto in range(len(temp)//2):
+                    threads.append(
+                        threading.Thread(target=__threadmandarMSG,args=(puertos[temp[puerto]],"3328686321","hola como estas yo muy bien y tu?")))
+                    threads[puerto].start()
+                for t in threads:
+                    t.join(timeout=10)
+    else:
+        mb.showinfo(title='hola',message="no cumple con los requisitos")
+
+def aumentarSaldo():
+    current=int(saldo.get())
+    saldo.delete(0,tkinter.END)
+    if current>=33:
+        saldo.insert(0,'9')
+    else:
+        saldo.insert(0,str(current+4))
 #max 160 char
 #AT+CMGF
 #AT+CMGR=2
@@ -287,6 +361,24 @@ scroll.config(command=mensajes.yview)
 mensajes.pack(side=tkinter.LEFT,fill=tkinter.BOTH)
 #tkinter list of messages to send
 tkinter.Button(master=msgFrame,text='SEND',padx=10,pady=10,command=sendMessages).grid(row=16,column=0)
+#AGREGADO
+tkinter.Button(master=msgFrame,text='RECIEVE',padx=10,pady=10,command=rcvMessages).grid(row=16,column=1)
+tkinter.Button(master=msgFrame,text='pasar saldo',padx=10,pady=10,command=pasarSaldos).grid(row=16,column=2)
+reversaso1=tkinter.Button(master=msgFrame,text='first to last',pady=5,command=reverse)
+reversaso1.grid(row=15,column=2)
+reversaso2=tkinter.Button(master=msgFrame,text='last to first',pady=5,command=reverse)
+reversaso2.grid(row=15,column=3)
+tkinter.Button(master=msgFrame,text='Set from..',command=changeImei).grid(row=11,column=3)
+
+
+
+
+saldo=tkinter.Entry(master=msgFrame,width=3,bd=4,)
+saldo.grid(row=16,column=3)
+saldo.delete(0,tkinter.END)
+saldo.insert(0,'0')
+
+
 tkinter.Button(master=msgFrame,text='CLONE',pady=5).grid(row=12,column=3)
 tkinter.Button(master=msgFrame,text='DELETE X',pady=5).grid(row=13,column=3)
 

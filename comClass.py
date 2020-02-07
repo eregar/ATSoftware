@@ -3,7 +3,7 @@ import serial
 import time
 import threading
 class Com(object):
-    
+    #implementar sendread con mas tiempo de espera
     def __init__(self,comNumber: int):
         super(Com,self).__init__()
         self.comNumber=comNumber
@@ -112,7 +112,7 @@ class Com(object):
     def send(self, msg: bytes):
         self.puerto.write(msg)
 
-    def read(self,byteNumber=0):
+    def read(self,byteNumber=0,expected='OK'):
         if byteNumber==0:
             buffer=''
             timeout=0
@@ -121,14 +121,12 @@ class Com(object):
                 byteNumber=self.puerto.inWaiting()
                 if byteNumber!=0:
                     buffer+=str(self.puerto.read(byteNumber))
-                if 'OK' in buffer:
+                if 'OK' in buffer or expected in buffer:
                     break
                 timeout+=1
                 time.sleep(1)
             if buffer=='':
                 print('%d didnt respond'%self.comNumber)
-                #self.changeState(constants.OFFLINE)
-                #self.puerto.close()
             return buffer
         else:
             return self.puerto.read(byteNumber)
@@ -164,40 +162,67 @@ class Com(object):
             return res[:-1]
         else:
             return None
+    
+    def sendUssd(self,ussdCode:str="#999#",stepstoFollow:str="0"):
+        #Cancel session
+        # #AT+CUSD=2
+        #AT+CUSD=1,"#999#",15 
+        #15= codigo de GSM
+        #AT+CUSD=1,"1"
+        self.startSerial()
+        if self.status==constants.OK:
+            self.sendRead(b'AT+CUSD=1,'+ussdCode.encode('utf-8')+b',15\r\n','OK')
+            time.sleep(0.5)
+            print(self.sendRead(expected=''))
+            stepstoFollow=stepstoFollow.strip()
+            for x in stepstoFollow:
+                #self.sendRead(b'AT+CUSD=1,'+bytes([x])+b'\r\n','OK')
+                self.sendRead(b'AT+CUSD=1,'+x.encode('utf-8')+'\r\n','OK')
+                time.sleep(0.5)
+                print(self.sendRead(expected=''))
+
+
+
+        
 
     def sendSMS(self,destino:str,contenido:str):
         if self.status==constants.OK:
             self.startSerial()
         if self.status==constants.OK:
-            self.sendRead(b'AT+CMGF=1','OK')
-            self.sendRead(b'AT+CPMS="SM"','OK')
-            self.sendRead(b'AT+CMGS="'+destino.encode('utf-8')+b'"','>')
-            result=self.sendRead(contenido.encode('utf-8'))
+            print("cambiando flag")
+            self.sendRead(b'AT+CMGF=1\r\n','OK')
+            print("cambiando storage")
+            self.sendRead(b'AT+CPMS="SM"\r\n','OK')
+            print("enviando")
+            self.sendRead(b'AT+CMGS="'+destino.encode('utf-8')+b'"\r\n','>')
+            print("poniendo contenido")
+            result=self.sendRead(contenido.encode('utf-8')+b'\r\n'+b'\x1a')
             if 'OK' in result:
                 #find ':' +2 espacios=numero de mensaje
                 print(result)
             else:
-                print('no ok',result)
+                print(self.comNumber,'no ok',result)
 
     def getSMS(self):
         if self.status==constants.OK:
             self.startSerial()
         if self.status==constants.OK:
-            self.sendRead(b'AT+CMGF=1','OK')
-            self.sendRead(b'AT+CPMS="SM"','OK')
-            result=self.sendRead(b'AT+CMGL="ALL"')
+            self.sendRead(b'AT+CMGF=1\r\n','OK')
+            self.sendRead(b'AT+CPMS="SM"\r\n','OK')
+            print("COM",self.comNumber,":") #ERASE LATER
+            result=self.sendRead(b'AT+CMGL="ALL"\r\n')
             if 'OK' in result:
                 return result
             else:
-                print('fasho')
+                print(self.comNumber,'fasho')
                 return result
     
     def sendRead(self,msg=b'',expected='',bits=0):
         self.reading.acquire()
         if msg != b'':
             self.send(msg)
-        x=self.read(bits)
         if expected!='':
+            x=self.read(bits,expected)
             if(expected in str(x)):
                 self.reading.release()
                 return expected
@@ -205,5 +230,6 @@ class Com(object):
                 self.reading.release()
                 return str(x)
         else:
+            x=self.read(bits)
             self.reading.release()
             return str(x)
