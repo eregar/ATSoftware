@@ -49,34 +49,6 @@ def __zoneSerial():
         __getIMEIS()
         __getCCIDs()
     
-def crossDial():
-    temp=[]  
-    for x in range(len(checkBoxes)):
-        if checkBoxes[x].get()!=0 and telefonos[x].get()!='': #aqui
-            temp.append(x)
-    for puerto in range(len(temp)//2):
-        half=puerto+len(temp)//2
-        s=puertos[temp[puerto]].dial(telefonos[temp[half]].get().strip(),__getSeconds())
-        if s:
-            r=puertos[temp[half]].ans()#va el entry
-            if not r:
-                puertos[temp[puerto]].hang(0)
-            else:
-                time.sleep(1)
-                puertos[temp[half]].dial(telefonos[temp[puerto]].get().strip(),__getSeconds())
-                puertos[temp[puerto]].ans()#va el entry
-
-    if len(temp) % 2!=0:
-        global chosen
-        indexsobrante=temp[-1]
-        if chosen=='':
-            setExtra()
-            if chosen=='':
-                chosen=__askForNumber(
-                    "hola","porfavor inserte un numero de telefono extra\n para recibir una llamada")
-        if chosen!='':
-            puertos[indexsobrante].dial(chosen,__getSeconds())
-    print('done')
 
 def constantCheck():
     global statuses
@@ -162,23 +134,6 @@ def changeNumbers():
             telefonos[x].delete(0,tkinter.END)
             telefonos[x].insert(0,numb[x])
 
-
-def setExtra():
-    global chosen
-    x=ch.get()
-    if len(x)==10:
-        chosen=x
-
-def __getSeconds():
-    try:
-        x=int(segundos.get())
-        return x
-    except ValueError:
-        mb.showinfo(title='hola',message='segundos no validos')
-        segundos.delete(0,tkinter.END)
-        segundos.insert(0,'60')
-        return 60
-
 def setFrame(frameNo : int):
     if frameNo==1:
         rcvFrame.forget()
@@ -197,14 +152,6 @@ def setFrame(frameNo : int):
         #msgFrame.grid(row=0,column=0,sticky=tkinter.N)
         msgFrame.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=1)
         comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
-    #elif frameNo==3:
-    #    rcvFrame.forget()
-    #    msgFrame.forget()
-    #    comFrame.forget()
-    #    writeFrame.forget()
-    #    telFrame.forget()
-    #    telFrame.pack(side=tkinter.RIGHT,expand=1,fill=tkinter.BOTH)
-    #    comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
 
 
 def sendMessages():
@@ -300,7 +247,7 @@ def aumentarSaldo():
 def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this one
     threads=[]
     if(dialNumber=="" or commandList==""):
-        print("se necesitan telefonos, destino e instrucciones para ejecutar")
+        mb.showinfo(title='hola',message="se necesitan numeros de telefono, destino e instrucciones para ejecutar")
         return
     for port in range(len(puertos)):
         tel=telefonos[port].get().strip()
@@ -312,6 +259,9 @@ def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this
 
 def __ussdChangePlan(ussdCode:str,commandList:str):#tkinter button to put this one
     threads=[]
+    if(ussdCode=="" or commandList==""):
+        mb.showinfo(title='hola',message="se necesitan telefonos y destino para ejecutar")
+        return
     for port in range(len(puertos)):
         if(puertos[port].status==constants.OK):
             temp=threading.Thread(target=puertos[port].sendUssd,args=(ussdCode,commandList),daemon=True)
@@ -321,8 +271,7 @@ def __ussdChangePlan(ussdCode:str,commandList:str):#tkinter button to put this o
     for th in threads:
         th.join()
 
-def dialUssd():
-    pass
+
 
 #max 160 char
 #AT+CMGF
@@ -350,7 +299,7 @@ connectb.grid(row=0,column=1)
 
 menu.pack()
 tkinter.Button(menu,text="CALLING",command=lambda: setFrame(1)).pack(side=tkinter.LEFT)
-tkinter.Button(menu,text="MESSAGING",command=lambda: setFrame(2)).pack(side=tkinter.LEFT)
+#tkinter.Button(menu,text="MESSAGING",command=lambda: setFrame(2)).pack(side=tkinter.LEFT)
 
 callWindow.pack(side=tkinter.TOP,fill=tkinter.BOTH,expand=1)
 setFrame(1)
@@ -370,24 +319,25 @@ for boton in statuses:
     boton.grid(row=const,column=1,sticky=tkinter.W)
     const+=1
 
-tkinter.Button(master=writeFrame,text='Dial',command= crossDial ).grid(
-    row=13,column=0)
+#tkinter.Button(master=writeFrame,text='Dial',command= crossDial ).grid(
+#    row=13,column=0)
 tkinter.Button(master=writeFrame,text='Set from database..',command=changeImei).grid(row=11,column=0)
-tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
-ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
-ch.grid(row=12,column=1)
-segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
-segundos.grid(row=13,column=1)
-segundos.insert(0,'60')
+#tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
+#ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
+#ch.grid(row=12,column=1)
+#segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
+#segundos.grid(row=13,column=1)
+#segundos.insert(0,'60')
 tkinter.Button(master=writeFrame,text='Dial w/ Code:',
-    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=14,column=0)
-tkinter.Button(master=writeFrame,text='USSDDial',command=dialUssd).grid(row=15,column=0)
-tkinter.Label(master=writeFrame,text='instructions:').grid(row=17,column=0)
+    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=16,column=0)
+tkinter.Button(master=writeFrame,text='USSDDial',
+    command=lambda: __ussdChangePlan(dialUssdNumber.get(),instructions.get())).grid(row=17,column=0)
+tkinter.Label(master=writeFrame,text='instructions:').grid(row=15,column=0)
 instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
-instructions.grid(row=17,column=1)
-tkinter.Label(master=writeFrame,text='dial to:').grid(row=16,column=0)
+instructions.grid(row=15,column=1)
+tkinter.Label(master=writeFrame,text='dial to:').grid(row=14,column=0)
 dialUssdNumber=tkinter.Entry(master=writeFrame,width=6,bd=4,)
-dialUssdNumber.grid(row=16,column=1)
+dialUssdNumber.grid(row=14,column=1)
 
 
 tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
@@ -435,5 +385,6 @@ for x in range(30):
     mensajes.insert(tkinter.END,'hola'*(x%3))
 t=threading.Thread(target=constantCheck,daemon=True)
 t.start()
+
 
 app.mainloop()
