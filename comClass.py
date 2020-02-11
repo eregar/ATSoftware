@@ -181,21 +181,33 @@ class Com(object):
                 time.sleep(0.5)
                 print(self.sendRead(expected=''))
 
-    def dialWithCode(self,dialNumber:str="#999#",stepstoFollow:str="0",numberToCode="0"):
+    def dialWithCode(self,dialNumber:str="*264",stepstoFollow:str="0",numberToCode="0"):
+        TIEMPOADP=15
+        TIEMPOENTREINSTRUCCIONES=5
+        TIEMPOENTRENUMERO=0.8
+        TIEMPOCONFIRMACION=10
+        TIEMPOCOLGAR=20
         self.startSerial()
         if self.status==constants.OK:
             self.sendRead(b'ATD'+dialNumber.encode('utf-8')+b';\r\n','OK')
             self.status=constants.DIALING
             stepstoFollow=stepstoFollow.strip()
-            time.sleep(45)#how manyyyy????
+            print("saltando aviso de privacidad")
+            time.sleep(TIEMPOADP)
             for x in stepstoFollow:
-                time.sleep(25)#how manyyyyyyyyyyyyyyyyy FUCKKKKKKKKKK
+                time.sleep(TIEMPOENTREINSTRUCCIONES+5*(int(x)))
+                print("ingresando",x)
                 self.sendRead(b'at+vts='+x.encode('utf-8')+b'\r\n','OK')
-            time.sleep(10)#maybe 10
+            time.sleep(TIEMPOENTREINSTRUCCIONES-1)#maybe 10
+            print("ingresando numero")
             for x in numberToCode:
-                time.sleep(0.8)
+                time.sleep(TIEMPOENTRENUMERO)
                 self.sendRead(b'at+vts='+x.encode('utf-8')+b'\r\n','OK')
-            time.sleep(10)
+            print("esperando confirmacion")
+            time.sleep(TIEMPOCONFIRMACION)
+            print("esperando colgar")
+            self.sendRead(b'at+vts=1\r\n','OK')#confirmar
+            time.sleep(TIEMPOCOLGAR)
             self.sendRead(b'ATH\r\n')
             print(self.comNumber,"instrucciones completadas")
         else:
