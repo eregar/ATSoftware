@@ -45,11 +45,13 @@ def buscar(ccid: str):
     for l in archivo:
         l=l.split(',')
         if len(l)!=3:
-            print("numero incorrecto de columnas, se necesita IMEI,NUMERO,CCID")
-            return (None,None)
+            l=l.split(';')
+            if len(l)!=3:
+                print("numero incorrecto de columnas, se necesita IMEI,NUMERO,ICCID")
+                return (None,None)
         if ccid in l[ccidC]:
             if len(l[numberC])!=10:
-                print("un numero no es del tamanio correcto")
+                print("un numero no es del tamanio correcto, se necesita IMEI,NUMERO,ICCID")
                 return (None,None)
             if len(l[imeiC])!=15:
                 print("Warning: un imei no es del tamanio suficiente")
