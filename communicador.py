@@ -1,6 +1,7 @@
 import tkinter
 from tkinter import messagebox as mb,simpledialog as sd,filedialog as fd
 import time
+import serial
 import constants
 import opener
 import comClass
@@ -324,6 +325,8 @@ def __ussdChangePlan(ussdCode:str,commandList:str):#tkinter button to put this o
 def dialUssd():
     pass
 
+    
+
 #max 160 char
 #AT+CMGF
 #AT+CMGR=2
@@ -336,7 +339,20 @@ def dialUssd():
 
 
 #listas necesarias
-for port in constants.PORTNUMBERS:
+portnumbers=[]
+portchecks = [(i + 1) for i in range(256)]
+result=[]
+for port in portchecks:
+    if port not in portnumbers:
+        try:
+            s = serial.Serial("COM%s" % port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            continue
+portnumbers+=result
+
+for port in portnumbers:
     puertos.append(comClass.Com(port))
     statuses.append(tkinter.Label(master=comFrame,text=str(port)))
     imeis.append(tkinter.Label(master=comFrame,width=15))
