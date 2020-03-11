@@ -79,6 +79,24 @@ def crossDial():
             puertos[indexsobrante].dial(chosen,__getSeconds())
     print('done')
 
+def oneForAllDial():
+    temp=[]  
+    theOne=0
+    for x in range(len(checkBoxes)):
+        if checkBoxes[x].get()!=0:
+            if theOne==0:
+                theOne=x
+            else:
+                print("solamente seleccione 1 telefono para que llame a todos los disponibles")
+                return
+        elif telefonos[x].get()!='' and puertos[x].status==constants.OK: #aqui
+            temp.append(x)
+    for puerto in range(len(temp)):
+        puertos[temp[puerto]].ans()#va el entry
+        puertos[theOne].dial(telefonos[temp[puerto]].get().strip(),__getSeconds())
+        time.sleep(1)
+    print('done')
+
 def constantCheck():
     global statuses
     global puertos
@@ -386,29 +404,29 @@ for boton in statuses:
     boton.grid(row=const,column=1,sticky=tkinter.W)
     const+=1
 
-tkinter.Button(master=writeFrame,text='Dial',command= crossDial ).grid(
+tkinter.Button(master=writeFrame,text='Dial',command= oneForAllDial ).grid(
     row=13,column=0)
 tkinter.Button(master=writeFrame,text='Set from database..',command=changeImei).grid(row=11,column=0)
-tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
+#tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
 ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
 ch.grid(row=12,column=1)
 segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
 segundos.grid(row=13,column=1)
 segundos.insert(0,'60')
-tkinter.Button(master=writeFrame,text='Dial w/ Code:',
-    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=14,column=0)
-tkinter.Button(master=writeFrame,text='USSDDial',command=dialUssd).grid(row=15,column=0)
-tkinter.Label(master=writeFrame,text='instructions:').grid(row=17,column=0)
-instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
-instructions.grid(row=17,column=1)
-tkinter.Label(master=writeFrame,text='dial to:').grid(row=16,column=0)
-dialUssdNumber=tkinter.Entry(master=writeFrame,width=6,bd=4,)
-dialUssdNumber.grid(row=16,column=1)
+#tkinter.Button(master=writeFrame,text='Dial w/ Code:',
+#    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=14,column=0)
+#tkinter.Button(master=writeFrame,text='USSDDial',command=dialUssd).grid(row=15,column=0)
+#tkinter.Label(master=writeFrame,text='instructions:').grid(row=17,column=0)
+#instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
+#instructions.grid(row=17,column=1)
+#tkinter.Label(master=writeFrame,text='dial to:').grid(row=16,column=0)
+#dialUssdNumber=tkinter.Entry(master=writeFrame,width=6,bd=4,)
+#dialUssdNumber.grid(row=16,column=1)
 
 
 tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
 tkinter.Label(master=comFrame,text='IMEI').grid(row=0,column=3)
-tkinter.Label(master=comFrame,text='CCID').grid(row=0,column=4)
+tkinter.Label(master=comFrame,text='ICCID').grid(row=0,column=4)
 tkinter.Label(master=telFrame,text='Numero').grid(row=0,column=0)
 
 

@@ -101,6 +101,7 @@ class Com(object):
             calling=threading.Thread(target=self.hang,args=(60,numero))
             calling._args=(seconds+10,numero)
             calling.start()
+            calling.join()
             return True
         else:
             return False
