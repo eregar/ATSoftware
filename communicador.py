@@ -48,39 +48,11 @@ def __zoneSerial():
             th.join()
         __getIMEIS()
         __getCCIDs()
-    
-def crossDial():
-    temp=[]  
-    for x in range(len(checkBoxes)):
-        if checkBoxes[x].get()!=0 and telefonos[x].get()!='': #aqui
-            temp.append(x)
-    for puerto in range(len(temp)//2):
-        half=puerto+len(temp)//2
-        s=puertos[temp[puerto]].dial(telefonos[temp[half]].get().strip(),__getSeconds())
-        if s:
-            r=puertos[temp[half]].ans()#va el entry
-            if not r:
-                puertos[temp[puerto]].hang(0)
-            else:
-                time.sleep(1)
-                puertos[temp[half]].dial(telefonos[temp[puerto]].get().strip(),__getSeconds())
-                puertos[temp[puerto]].ans()#va el entry
 
-    if len(temp) % 2!=0:
-        global chosen
-        indexsobrante=temp[-1]
-        if chosen=='':
-            setExtra()
-            if chosen=='':
-                chosen=__askForNumber(
-                    "hola","porfavor inserte un numero de telefono extra\n para recibir una llamada")
-        if chosen!='':
-            puertos[indexsobrante].dial(chosen,__getSeconds())
-    print('done')
 
 def oneForAllDial():
     temp=[]
-    theOnes=[]  
+    theOnes=[]
     for x in range(len(checkBoxes)):
         if checkBoxes[x].get()!=0:
             theOnes.append(x)
@@ -120,7 +92,7 @@ def selectAll():
             break
     if checked:
         for j in checkBoxes:
-            j.set(1)        
+            j.set(1)
 
 
 def __askForNumber(titulo='hola',asunto='inserte un numero'):
@@ -166,7 +138,7 @@ def changeImei():
                         flag=True
                         print("no encontro numero")
                         msg+='COM%d: %s\n' %(puertos[x].comNumber,s)
-                
+
         if flag:
             mb.showinfo(title='hola',message=msg)
         if flag2:
@@ -218,18 +190,10 @@ def setFrame(frameNo : int):
         #msgFrame.grid(row=0,column=0,sticky=tkinter.N)
         msgFrame.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=1)
         comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
-    #elif frameNo==3:
-    #    rcvFrame.forget()
-    #    msgFrame.forget()
-    #    comFrame.forget()
-    #    writeFrame.forget()
-    #    telFrame.forget()
-    #    telFrame.pack(side=tkinter.RIGHT,expand=1,fill=tkinter.BOTH)
-    #    comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
 
 
 def sendMessages():
-    temp=[]  
+    temp=[]
     comCounter=0
     for x in range(len(checkBoxes)):
         if checkBoxes[x].get()!=0:
@@ -254,7 +218,7 @@ def rcvMessages():
 #AGREGADO
 def __threadmandarMSG(puerto, destinatario :str, contenido :str):
     puerto.sendSMS(destinatario,contenido)
-    
+
 def __threadrecibirMSG():
     pass
 
@@ -270,7 +234,7 @@ def reverse():
         reversa=True
 
 def pasarSaldos():
-    temp=[]  
+    temp=[]
     global reversa
     if reversa:
         for x in range(len(checkBoxes),0,-1):
@@ -321,7 +285,7 @@ def aumentarSaldo():
 def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this one
     threads=[]
     if(dialNumber=="" or commandList==""):
-        print("se necesitan telefonos, destino e instrucciones para ejecutar")
+        mb.showinfo(title='hola',message="se necesitan numeros de telefono, destino e instrucciones para ejecutar")
         return
     for port in range(len(puertos)):
         tel=telefonos[port].get().strip()
@@ -333,6 +297,9 @@ def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this
 
 def __ussdChangePlan(ussdCode:str,commandList:str):#tkinter button to put this one
     threads=[]
+    if(ussdCode=="" or commandList==""):
+        mb.showinfo(title='hola',message="se necesitan telefonos y destino para ejecutar")
+        return
     for port in range(len(puertos)):
         if(puertos[port].status==constants.OK):
             temp=threading.Thread(target=puertos[port].sendUssd,args=(ussdCode,commandList),daemon=True)
@@ -342,10 +309,9 @@ def __ussdChangePlan(ussdCode:str,commandList:str):#tkinter button to put this o
     for th in threads:
         th.join()
 
-def dialUssd():
-    pass
 
-    
+
+
 
 #max 160 char
 #AT+CMGF
@@ -386,7 +352,7 @@ connectb.grid(row=0,column=1)
 
 menu.pack()
 tkinter.Button(menu,text="CALLING",command=lambda: setFrame(1)).pack(side=tkinter.LEFT)
-tkinter.Button(menu,text="MESSAGING",command=lambda: setFrame(2)).pack(side=tkinter.LEFT)
+#tkinter.Button(menu,text="MESSAGING",command=lambda: setFrame(2)).pack(side=tkinter.LEFT)
 
 callWindow.pack(side=tkinter.TOP,fill=tkinter.BOTH,expand=1)
 setFrame(1)
@@ -415,15 +381,15 @@ ch.grid(row=12,column=1)
 segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
 segundos.grid(row=13,column=1)
 segundos.insert(0,'60')
-#tkinter.Button(master=writeFrame,text='Dial w/ Code:',
-#    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=14,column=0)
-#tkinter.Button(master=writeFrame,text='USSDDial',command=dialUssd).grid(row=15,column=0)
-#tkinter.Label(master=writeFrame,text='instructions:').grid(row=17,column=0)
-#instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
-#instructions.grid(row=17,column=1)
-#tkinter.Label(master=writeFrame,text='dial to:').grid(row=16,column=0)
-#dialUssdNumber=tkinter.Entry(master=writeFrame,width=6,bd=4,)
-#dialUssdNumber.grid(row=16,column=1)
+tkinter.Button(master=writeFrame,text='Dial w/ Code:',
+    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=16,column=0)
+tkinter.Label(master=writeFrame,text='instructions:').grid(row=15,column=0)
+instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
+instructions.grid(row=15,column=1)
+tkinter.Label(master=writeFrame,text='dial to:').grid(row=14,column=0)
+dialUssdNumber=tkinter.Entry(master=writeFrame,width=6,bd=4,)
+dialUssdNumber.grid(row=14,column=1)
+
 
 
 tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
@@ -471,5 +437,6 @@ for x in range(30):
     mensajes.insert(tkinter.END,'hola'*(x%3))
 t=threading.Thread(target=constantCheck,daemon=True)
 t.start()
+
 
 app.mainloop()
