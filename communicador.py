@@ -6,7 +6,6 @@ import constants
 import opener
 import comClass
 import threading
-import mensaje
 
 #variables globales
 puertos=[]
@@ -87,6 +86,9 @@ def oneForAllDial():
             theOnes.append(x)
         elif telefonos[x].get()!='' and puertos[x].status==constants.OK: #aqui
             temp.append(x)
+    if temp==[]:
+        mb.showinfo(title='hola',message="debe de haber almenos un celular seleccionado")
+        return
     for puerto in range(len(temp)):
         pos=puerto%len(theOnes)
         c=-1
