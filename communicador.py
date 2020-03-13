@@ -86,8 +86,8 @@ def oneForAllDial():
             theOnes.append(x)
         elif telefonos[x].get()!='' and puertos[x].status==constants.OK: #aqui
             temp.append(x)
-    if temp==[]:
-        mb.showinfo(title='hola',message="debe de haber almenos un celular seleccionado")
+    if temp==[] or theOnes==[]:
+        mb.showinfo(title='hola',message="debe de haber almenos un celular seleccionado y un celular a llamar")
         return
     c=-1
     for puerto in range(len(temp)):
