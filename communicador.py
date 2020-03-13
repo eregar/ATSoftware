@@ -80,20 +80,20 @@ def crossDial():
     print('done')
 
 def oneForAllDial():
-    temp=[]  
-    theOne=0
+    temp=[]
+    theOnes=[]  
     for x in range(len(checkBoxes)):
         if checkBoxes[x].get()!=0:
-            if theOne==0:
-                theOne=x
-            else:
-                print("solamente seleccione 1 telefono para que llame a todos los disponibles")
-                return
+            theOnes.append(x)
         elif telefonos[x].get()!='' and puertos[x].status==constants.OK: #aqui
             temp.append(x)
     for puerto in range(len(temp)):
-        puertos[temp[puerto]].ans()#va el entry
-        puertos[theOne].dial(telefonos[temp[puerto]].get().strip(),__getSeconds())
+        pos=puerto%len(theOnes)
+        c=-1
+        if pos==0:
+            c+=1
+        puertos[theOnes[pos]].dial(telefonos[temp[puerto]].get().strip(),__getSeconds())
+        puertos[temp[puerto]].ans(__getSeconds()*c)#va el entry
         time.sleep(1)
     print('done')
 
@@ -193,7 +193,7 @@ def __getSeconds():
         x=int(segundos.get())
         return x
     except ValueError:
-        mb.showinfo(title='hola',message='segundos no validos')
+        mb.showinfo(title='hola',message='segundos no validos,llamando con 60')
         segundos.delete(0,tkinter.END)
         segundos.insert(0,'60')
         return 60
