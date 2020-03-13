@@ -21,7 +21,7 @@ class Com(object):
         time.sleep(8)
         try:
             startingTime=0
-            while timeout<12+waitingTime:
+            while timeout<(12+(waitingTime)):
                 bytesToRead=self.puerto.inWaiting()
                 if bytesToRead!=0:
                     x=self.sendRead(bits=bytesToRead)
@@ -38,7 +38,7 @@ class Com(object):
                 timeout+=trt
                 time.sleep(1)
             print(timeout)
-            if timeout>=12:
+            if timeout>=12+waitingTime:
                 print('nadie llamo a',self.comNumber)
             self.changeState(constants.OK)
         except serial.SerialException as e:
@@ -73,7 +73,7 @@ class Com(object):
         if self.status!=constants.DIALING:
             self.startSerial()
         if self.status==constants.OK or self.status==constants.DIALING:
-            answer=threading.Thread(target=self.autoAnswer,args=(waitingTime))
+            answer=threading.Thread(target=self.autoAnswer,args=(waitingTime,))
             answer.start()
             self.changeState(constants.DIALING)
             return True

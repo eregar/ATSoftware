@@ -89,13 +89,14 @@ def oneForAllDial():
     if temp==[]:
         mb.showinfo(title='hola',message="debe de haber almenos un celular seleccionado")
         return
+    c=-1
     for puerto in range(len(temp)):
         pos=puerto%len(theOnes)
-        c=-1
         if pos==0:
             c+=1
         puertos[theOnes[pos]].dial(telefonos[temp[puerto]].get().strip(),__getSeconds())
-        puertos[temp[puerto]].ans(__getSeconds()*c)#va el entry
+        print(c*__getSeconds())
+        puertos[temp[puerto]].ans( c*(__getSeconds()) + 8*c )#va el entry
         time.sleep(1)
     print('done')
 
