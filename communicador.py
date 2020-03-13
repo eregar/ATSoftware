@@ -95,7 +95,6 @@ def oneForAllDial():
         if pos==0:
             c+=1
         puertos[theOnes[pos]].dial(telefonos[temp[puerto]].get().strip(),__getSeconds())
-        print(c*__getSeconds())
         puertos[temp[puerto]].ans( c*(__getSeconds()) + 8*c )#va el entry
         time.sleep(1)
     print('done')
