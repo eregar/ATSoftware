@@ -26,6 +26,8 @@ def listNumbers():
     res=[]
     for l in archivo:
         l=l.split(',')
+        if len(l)<3:
+            l=l[0].split(';')
         for p in l:
             try:
                 int(p)
@@ -44,9 +46,9 @@ def buscar(ccid: str):
 
     for l in archivo:
         l=l.split(',')
-        if len(l)!=3:
-            l=l.split(';')
-            if len(l)!=3:
+        if len(l)<3:
+            l=l[0].split(';')
+            if len(l)<3:
                 print("numero incorrecto de columnas, se necesita IMEI,NUMERO,ICCID")
                 return (None,None)
         if ccid in l[ccidC]:
