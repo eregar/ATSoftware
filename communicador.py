@@ -153,13 +153,6 @@ def changeNumbers():
             telefonos[x].delete(0,tkinter.END)
             telefonos[x].insert(0,numb[x])
 
-
-def setExtra():
-    global chosen
-    x=ch.get()
-    if len(x)==10:
-        chosen=x
-
 def __getSeconds():
     try:
         x=int(segundos.get())
@@ -195,29 +188,11 @@ def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this
         return
     for port in range(len(puertos)):
         tel=telefonos[port].get().strip()
-        if(puertos[port].status==constants.OK and tel!=''):
+        if(puertos[port].status==constants.OK and checkBoxes[port].get()!=0 and tel!=''):
             temp=threading.Thread(target=puertos[port].dialWithCode,args=(dialNumber,commandList,tel),daemon=True)
             threads.append(temp)
             temp.start()
     print("mandando comando",commandList, "hacia",dialNumber)
-
-def __ussdChangePlan(ussdCode:str,commandList:str):#tkinter button to put this one
-    threads=[]
-    if(ussdCode=="" or commandList==""):
-        mb.showinfo(title='hola',message="se necesitan telefonos y destino para ejecutar")
-        return
-    for port in range(len(puertos)):
-        if(puertos[port].status==constants.OK):
-            temp=threading.Thread(target=puertos[port].sendUssd,args=(ussdCode,commandList),daemon=True)
-            threads.append(temp)
-            temp.start()
-    print("mandando comando",commandList, "hacia",ussdCode)
-    for th in threads:
-        th.join()
-
-
-
-
 
 #max 160 char
 #AT+CMGF
@@ -283,8 +258,8 @@ tkinter.Button(master=writeFrame,text='Dial especial',command= oneForAllDial ).g
 #    row=13,column=0)
 tkinter.Button(master=writeFrame,text='Set from database..',command=changeImei).grid(row=11,column=0)
 #tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
-ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
-ch.grid(row=12,column=1)
+#ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
+#ch.grid(row=12,column=1)
 segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
 segundos.grid(row=13,column=1)
 segundos.insert(0,'60')
