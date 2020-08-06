@@ -23,7 +23,7 @@ menu=tkinter.Frame(app)
 writeFrame=tkinter.Frame(callWindow)
 comFrame=tkinter.Frame(callWindow)
 telFrame=tkinter.Frame(callWindow)
-msgFrame=tkinter.Frame(callWindow)
+#msgFrame=tkinter.Frame(callWindow)
 rcvFrame=tkinter.Frame(callWindow)
 #frame para message box, entry de destinatario, boton de mandar mensaje
 #frame para ver mensajes recividos
@@ -88,7 +88,6 @@ def __getCCIDs():
         if puertos[puerto].status==constants.OK:
             ccids[puerto]['text']=puertos[puerto].getCCID()
 
-
 def changeImei():
     msg='no se encontraron los siguientes CCIDs:\n'
     msg2='no se pudieron cambiar los siguientes IMEI:\n'
@@ -134,115 +133,12 @@ def changeNumbers():
             telefonos[x].delete(0,tkinter.END)
             telefonos[x].insert(0,numb[x])
 
-def setFrame(frameNo : int):
-    if frameNo==1:
-        rcvFrame.forget()
-        msgFrame.forget()
-        comFrame.forget()
-        telFrame.forget()
-        writeFrame.forget()
-        #telFrame.grid(row=0,column=2,sticky=tkinter.S)
-        telFrame.pack(side=tkinter.RIGHT,expand=1,fill=tkinter.BOTH)
-        comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
-        writeFrame.pack(side=tkinter.LEFT,expand=1,fill=tkinter.BOTH)
-    elif frameNo==2:
-        telFrame.forget()
-        writeFrame.forget()
-        comFrame.forget()
-        #msgFrame.grid(row=0,column=0,sticky=tkinter.N)
-        msgFrame.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=1)
-        comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
-
-
-def sendMessages():
-    temp=[]  
-    comCounter=0
-    for x in range(len(checkBoxes)):
-        if checkBoxes[x].get()!=0:
-            temp.append(x)
-    if len(temp)>0:
-        for x in mensajes.curselection():
-            #messagelist[x]
-            print('msg',mensajes.get(x),'to com',puertos[temp[comCounter]].comNumber)
-            #send the message (thread?)
-            comCounter= (comCounter+1) % len(temp)
-#AGREGADO
-def rcvMessages():
-    temp=[]
-    for x in range(len(checkBoxes)):
-        if checkBoxes[x].get()!=0:
-            temp.append(x)
-    for puerto in range(len(temp)):
-        mensajes=puertos[temp[puerto]].getSMS().split('+CMGL:')
-        for men in mensajes:
-            if "PASA TIEMPO" in men: #REC
-                print(men)
-#AGREGADO
 def __threadmandarMSG(puerto, destinatario :str, contenido :str):
     puerto.sendSMS(destinatario,contenido)
     
 def __threadrecibirMSG():
     pass
 
-def reverse():
-    global reversa,reversaso1,reversaso2
-    if reversa:
-        reversaso1['state']='disabled'
-        reversaso2['state']='normal'
-        reversa=False
-    else:
-        reversaso1['state']='normal'
-        reversaso2['state']='disabled'
-        reversa=True
-
-def pasarSaldos():
-    temp=[]  
-    global reversa
-    if reversa:
-        for x in range(len(checkBoxes),0,-1):
-            if checkBoxes[x-1].get()!=0:
-                temp.append(x-1)
-    else:
-        for x in range(len(checkBoxes)):
-            if checkBoxes[x].get()!=0:
-                temp.append(x)
-    if len(temp)>0 and len(temp)%2==0:
-        res=mb.askyesno(title='hola',message='son '+str(len(temp)//2)+", empezando por pos "+str(temp[0])+"\ncontinuar?")
-        if res:
-            threads=[]
-            for puerto in range(len(temp)//2):
-                half=puerto+len(temp)//2
-                threads.append(threading.Thread(
-                    target=__threadmandarMSG,args=(puertos[temp[puerto]],"7373",telefonos[temp[half]].get()+" "+saldo.get())
-                    ,daemon=True))
-                threads[puerto].start()
-            for t in threads:
-                t.join(timeout=10)
-            if saldo.get()=="9":
-                print("dumping")
-                for puerto in range(len(temp)//2):
-                    puertos[temp[puerto]].sendSMS("7373",constants.DUMPNUMBERS[puerto]+" 23")
-            aumentarSaldo()
-            reverse()
-            res=mb.askyesno(title='hola',message='termino de pasar, mandar mensaje?')
-            if res:
-                threads=[]
-                for puerto in range(len(temp)//2):
-                    threads.append(
-                        threading.Thread(target=__threadmandarMSG,args=(puertos[temp[puerto]],"3328686321","hola como estas yo muy bien y tu?")))
-                    threads[puerto].start()
-                for t in threads:
-                    t.join(timeout=10)
-    else:
-        mb.showinfo(title='hola',message="no cumple con los requisitos")
-
-def aumentarSaldo():
-    current=int(saldo.get())
-    saldo.delete(0,tkinter.END)
-    if current>=33:
-        saldo.insert(0,'9')
-    else:
-        saldo.insert(0,str(current+4))
 
 def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this one
     threads=[]
@@ -252,7 +148,10 @@ def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this
     for port in range(len(puertos)):
         tel=telefonos[port].get().strip()
         if(puertos[port].status==constants.OK and tel!=''):
-            temp=threading.Thread(target=puertos[port].dialWithCode,args=(dialNumber,commandList,tel),daemon=True)
+            timestamps=[]
+            for x in entries:
+                timestamps.append(int(x.get()))
+            temp=threading.Thread(target=puertos[port].dialWithCode,args=(dialNumber,commandList,tel,timestamps),daemon=True)
             threads.append(temp)
             temp.start()
     print("mandando comando",commandList, "hacia",dialNumber)
@@ -292,17 +191,17 @@ for port in constants.PORTNUMBERS:
     ccids.append(tkinter.Label(master=comFrame,width=20))
 
 
-cuadro=tkinter.Text(msgFrame,width=50,height=10,bd=4)
-cuadro.grid(row=1,column=0,sticky=tkinter.N,columnspan=2,rowspan=10)
+#cuadro=tkinter.Text(msgFrame,width=50,height=10,bd=4)
+#cuadro.grid(row=1,column=0,sticky=tkinter.N,columnspan=2,rowspan=10)
 connectb=tkinter.Button(master=comFrame,text='connect',command= startPorts )
 connectb.grid(row=0,column=1)
 
 menu.pack()
-tkinter.Button(menu,text="CALLING",command=lambda: setFrame(1)).pack(side=tkinter.LEFT)
-#tkinter.Button(menu,text="MESSAGING",command=lambda: setFrame(2)).pack(side=tkinter.LEFT)
 
 callWindow.pack(side=tkinter.TOP,fill=tkinter.BOTH,expand=1)
-setFrame(1)
+telFrame.pack(side=tkinter.RIGHT,expand=1,fill=tkinter.BOTH)
+comFrame.pack(side=tkinter.RIGHT,fill=tkinter.BOTH,expand=1,padx=50)
+writeFrame.pack(side=tkinter.LEFT,expand=1,fill=tkinter.BOTH)
 const=1
 for boton in statuses:
     checkBoxes.append(0)
@@ -319,15 +218,9 @@ for boton in statuses:
     boton.grid(row=const,column=1,sticky=tkinter.W)
     const+=1
 
-#tkinter.Button(master=writeFrame,text='Dial',command= crossDial ).grid(
-#    row=13,column=0)
+
 tkinter.Button(master=writeFrame,text='Set from database..',command=changeImei).grid(row=11,column=0)
-#tkinter.Button(master=writeFrame,text='setExtra',command=setExtra).grid(row=12,column=0)
-#ch=tkinter.Entry(master=writeFrame,width=10,bd=4)
-#ch.grid(row=12,column=1)
-#segundos=tkinter.Entry(master=writeFrame,width=3,bd=4,)
-#segundos.grid(row=13,column=1)
-#segundos.insert(0,'60')
+
 tkinter.Button(master=writeFrame,text='Dial w/ Code:',
     command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=16,column=0)
 tkinter.Button(master=writeFrame,text='USSDDial',
@@ -339,6 +232,10 @@ tkinter.Label(master=writeFrame,text='dial to:').grid(row=14,column=0)
 dialUssdNumber=tkinter.Entry(master=writeFrame,width=6,bd=4,)
 dialUssdNumber.grid(row=14,column=1)
 
+entries=[]
+for x in range(5):
+    entries.append(tkinter.Entry(master=writeFrame,width=6,bd=4))
+    entries[x].grid(row=18+x,column=1)
 
 tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
 tkinter.Label(master=comFrame,text='IMEI').grid(row=0,column=3)
@@ -346,43 +243,6 @@ tkinter.Label(master=comFrame,text='CCID').grid(row=0,column=4)
 tkinter.Label(master=telFrame,text='Numero').grid(row=0,column=0)
 
 
-tkinter.Button(master=msgFrame,text='add+').grid(row=0,column=1)
-tkinter.Label(master=msgFrame,text='Address:').grid(row=0,column=0)
-destino=tkinter.Entry(master=msgFrame,width=40,bd=4)
-destino.grid(row=0,column=1)
-
-cajon=tkinter.Frame(msgFrame)
-cajon.grid(row=11,column=0,columnspan=2,rowspan=5,pady=10)
-scroll=tkinter.Scrollbar(cajon)
-scroll.pack(side=tkinter.RIGHT,fill=tkinter.Y)
-mensajes=tkinter.Listbox(master=cajon,yscrollcommand=scroll.set,width=60,selectmode=tkinter.EXTENDED)
-scroll.config(command=mensajes.yview)
-mensajes.pack(side=tkinter.LEFT,fill=tkinter.BOTH)
-#tkinter list of messages to send
-tkinter.Button(master=msgFrame,text='SEND',padx=10,pady=10,command=sendMessages).grid(row=16,column=0)
-#AGREGADO
-tkinter.Button(master=msgFrame,text='RECIEVE',padx=10,pady=10,command=rcvMessages).grid(row=16,column=1)
-tkinter.Button(master=msgFrame,text='pasar saldo',padx=10,pady=10,command=pasarSaldos).grid(row=16,column=2)
-reversaso1=tkinter.Button(master=msgFrame,text='first to last',pady=5,command=reverse)
-reversaso1.grid(row=15,column=2)
-reversaso2=tkinter.Button(master=msgFrame,text='last to first',pady=5,command=reverse)
-reversaso2.grid(row=15,column=3)
-tkinter.Button(master=msgFrame,text='Set from..',command=changeImei).grid(row=11,column=3)
-
-
-
-
-saldo=tkinter.Entry(master=msgFrame,width=3,bd=4,)
-saldo.grid(row=16,column=3)
-saldo.delete(0,tkinter.END)
-saldo.insert(0,'0')
-
-
-tkinter.Button(master=msgFrame,text='CLONE',pady=5).grid(row=12,column=3)
-tkinter.Button(master=msgFrame,text='DELETE X',pady=5).grid(row=13,column=3)
-
-for x in range(30):
-    mensajes.insert(tkinter.END,'hola'*(x%3))
 t=threading.Thread(target=constantCheck,daemon=True)
 t.start()
 

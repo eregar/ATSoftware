@@ -181,12 +181,12 @@ class Com(object):
                 time.sleep(0.5)
                 print(self.sendRead(expected=''))
 
-    def dialWithCode(self,dialNumber:str="*264",stepstoFollow:str="0",numberToCode="0"):
-        TIEMPOADP=15
-        TIEMPOENTREINSTRUCCIONES=5
-        TIEMPOENTRENUMERO=0.8
-        TIEMPOCONFIRMACION=10
-        TIEMPOCOLGAR=20
+    def dialWithCode(self,dialNumber:str,stepstoFollow:str,numberToCode:str,timestamps):
+        TIEMPOADP=timestamps[0]
+        TIEMPOENTREINSTRUCCIONES=timestamps[1]
+        TIEMPOENTRENUMERO=timestamps[2]
+        TIEMPOCONFIRMACION=timestamps[3]
+        TIEMPOCOLGAR=timestamps[4]
         self.startSerial()
         if self.status==constants.OK:
             self.sendRead(b'ATD'+dialNumber.encode('utf-8')+b';\r\n','OK')
