@@ -221,8 +221,7 @@ for boton in statuses:
 
 tkinter.Button(master=writeFrame,text='Set from database..',command=changeImei).grid(row=11,column=0)
 
-tkinter.Button(master=writeFrame,text='Dial w/ Code:',
-    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=16,column=0)
+#tkinter.Button(master=writeFrame,text='Dial w/ Code:',command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=16,column=0)
 tkinter.Button(master=writeFrame,text='USSDDial',
     command=lambda: __ussdChangePlan(dialUssdNumber.get(),instructions.get())).grid(row=17,column=0)
 tkinter.Label(master=writeFrame,text='instructions:').grid(row=15,column=0)
