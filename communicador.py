@@ -228,14 +228,17 @@ tkinter.Button(master=writeFrame,text='USSDDial',
 tkinter.Label(master=writeFrame,text='instructions:').grid(row=15,column=0)
 instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
 instructions.grid(row=15,column=1)
+instructions.insert(0,"4211")
 tkinter.Label(master=writeFrame,text='dial to:').grid(row=14,column=0)
 dialUssdNumber=tkinter.Entry(master=writeFrame,width=6,bd=4,)
 dialUssdNumber.grid(row=14,column=1)
+dialUssdNumber.insert(0,"*264")
 
 entries=[]
 for x in range(5):
     entries.append(tkinter.Entry(master=writeFrame,width=6,bd=4))
     entries[x].grid(row=18+x,column=1)
+    entries[x].insert(0,constants.TIMERS[x])
 
 tkinter.Button(master=comFrame,text='select all',command=selectAll).grid(row=0,column=0)
 tkinter.Label(master=comFrame,text='IMEI').grid(row=0,column=3)

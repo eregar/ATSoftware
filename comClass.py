@@ -195,18 +195,18 @@ class Com(object):
             print("saltando aviso de privacidad")
             time.sleep(TIEMPOADP)
             for x in stepstoFollow:
-                time.sleep(TIEMPOENTREINSTRUCCIONES+5*(int(x)))
-                print("ingresando",x)
+                print("ingresado: ",x)
+                time.sleep(TIEMPOENTREINSTRUCCIONES+3*(int(x)))
                 self.sendRead(b'at+vts='+x.encode('utf-8')+b'\r\n','OK')
-            time.sleep(TIEMPOENTREINSTRUCCIONES-1)#maybe 10
+            #time.sleep(TIEMPOENTREINSTRUCCIONES-1)#maybe 10
             print("ingresando numero")
             for x in numberToCode:
                 time.sleep(TIEMPOENTRENUMERO)
                 self.sendRead(b'at+vts='+x.encode('utf-8')+b'\r\n','OK')
             print("esperando confirmacion")
             time.sleep(TIEMPOCONFIRMACION)
-            print("esperando colgar")
             self.sendRead(b'at+vts=1\r\n','OK')#confirmar
+            print("esperando colgar")
             time.sleep(TIEMPOCOLGAR)
             self.sendRead(b'ATH\r\n')
             print(self.comNumber,"instrucciones completadas")
