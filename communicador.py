@@ -150,7 +150,7 @@ def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this
         if(puertos[port].status==constants.OK and tel!=''):
             timestamps=[]
             for x in entries:
-                timestamps.append(int(x.get()))
+                timestamps.append(float(x.get()))
             temp=threading.Thread(target=puertos[port].dialWithCode,args=(dialNumber,commandList,tel,timestamps),daemon=True)
             threads.append(temp)
             temp.start()
@@ -221,9 +221,10 @@ for boton in statuses:
 
 tkinter.Button(master=writeFrame,text='Set from database..',command=changeImei).grid(row=11,column=0)
 
-#tkinter.Button(master=writeFrame,text='Dial w/ Code:',command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=16,column=0)
-tkinter.Button(master=writeFrame,text='USSDDial',
-    command=lambda: __ussdChangePlan(dialUssdNumber.get(),instructions.get())).grid(row=17,column=0)
+tkinter.Button(master=writeFrame,text='Dial w/ Code:',
+    command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=16,column=0)
+#tkinter.Button(master=writeFrame,text='USSDDial',
+#    command=lambda: __ussdChangePlan(dialUssdNumber.get(),instructions.get())).grid(row=17,column=0)
 tkinter.Label(master=writeFrame,text='instructions:').grid(row=15,column=0)
 instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
 instructions.grid(row=15,column=1)
