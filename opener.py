@@ -58,5 +58,3 @@ def buscar(ccid: str):
             return (l[numberC],l[imeiC])
 
     return (None,None)
-
-print("hola")
