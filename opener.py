@@ -1,63 +1,60 @@
-archivo=""
-IMEI=1
-NUMERO=2
-CCID=3
+class Opener:
+    def __init__(self):
+        self.lines=''
+        self.imeiC=-1
+        self.numberC=-1
+        self.iccidC=-1
 
-def abrir(arch: str):
-    global archivo
-    try:
-        archivo=open(arch,'r').readlines()
-    except FileNotFoundError:
-        return False
-    else:
-        return True
-
-def readArchivo(arch):
-    global archivo
-    if arch:
-        archivo=arch.readlines()
-        arch.close()
-        return True
-    else:
+    def readArchivo(self,arch):
+        if arch:
+            self.lines=arch.readlines()
+            arch.close()
+            return True
         return False
 
-def listNumbers():
-    global archivo
-    res=[]
-    for l in archivo:
-        l=l.split(',')
-        for p in l:
-            try:
-                int(p)
-                if len(p.strip())==10:
-                    res.append(p.strip())
-            except:
-                continue
-    return res
+    def getLines(self):
+        return self.lines
 
+    def getLine(self, line:int):
+        if(line<len(self.lines)):
+            return self.lines[line]
+        else: return self.lines[0]
 
-def buscar(ccid: str):
-    global archivo
-    imeiC=0
-    numberC=1
-    ccidC=2
+    def _setColumns(self,separator=','):
+        if self.numberC ==-1 or self.iccidC == -1:
+            l=self.lines[0].split(separator)
+            for s in range(len(l)):
+                if len(l[s].strip('\n').strip())==10: 
+                    self.numberC=s
+                elif len(l[s].strip('\n').strip())==19:
+                    self.iccidC=s
+                elif len(l[s].strip('\n').strip())==15:
+                    self.imeiC=s
+            if self.iccidC == -1:
+                print("no se encuentra un iccid aceptable en el archivo")
+                return False
+            if self.numberC == -1:
+                print("no se encuentra un numero aceptable en el archivo")
+                return False
+            if self.imeiC == -1:
+                self.imeiC = 0
+        return True
+        
 
-    for l in archivo:
-        l=l.split(',')
-        if len(l)!=3:
-            l=l.split(';')
-            if len(l)!=3:
-                print("numero incorrecto de columnas, se necesita IMEI,NUMERO,ICCID")
-                return (None,None)
-        if ccid in l[ccidC]:
-            if len(l[numberC])!=10:
-                print("un numero no es del tamanio correcto, se necesita IMEI,NUMERO,ICCID")
-                return (None,None)
-            if len(l[imeiC])!=15:
-                print("Warning: un imei no es del tamanio suficiente")
-                return(l[numberC],None)
-
-            return (l[numberC],l[imeiC])
-
-    return (None,None)
-
+    def buscarIccid(self,ccid: str,separator=','):
+        if not self._setColumns():
+            return(None,None)
+        for l in self.lines:
+            l=l.split(separator)
+            if ccid in l[self.iccidC]:
+                if len(l[self.numberC])!=10:
+                    print("un numero no es del tamanio correcto")
+                    return(None,None)
+                if len(l)>=3:
+                    if len(l[self.imeiC])!=15:
+                        print("Warning: un imei no es del tamanio suficiente")
+                        return(l[self.numberC],None)
+                    return(l[self.numberC],l[self.imeiC])
+                else:
+                    return(l[self.numberC],None)
+        return(None,None)

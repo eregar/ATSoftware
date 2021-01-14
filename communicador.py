@@ -2,10 +2,11 @@ import tkinter
 from tkinter import messagebox as mb,simpledialog as sd,filedialog as fd
 import time
 import constants
-import opener
+from opener import Opener
 import comClass
 import threading
 import mensaje
+import random
 
 #variables globales
 puertos=[]
@@ -28,6 +29,10 @@ rcvFrame=tkinter.Frame(callWindow)
 #frame para message box, entry de destinatario, boton de mandar mensaje
 #frame para ver mensajes recividos
 chosen=''
+tempSendMsg=fd.askopenfile(title="hola",filetypes=(('csv files','*.csv'),('text files','*.txt')))
+opin=Opener()
+if not opin.readArchivo(tempSendMsg):
+    print("could not initialize opin")
 
 def startPorts():
     connectb['state']='disabled'
@@ -123,12 +128,14 @@ def changeImei():
     flag2=False
     flag=False
     h=fd.askopenfile(title="hola",filetypes=(('csv files','*.csv'),('text files','*.txt')))
-    if opener.readArchivo(h):
+    op=Opener()
+    if op.readArchivo(h):
+        
         for x in range(len(puertos)):
             if puertos[x].status==constants.OK:
                 s=puertos[x].getCCID()
                 if s is not None:
-                    numero,imei=opener.buscar(s)
+                    numero,imei=op.buscarIccid(s)
                     if (numero is not None) :
                         if (imei is not None):
                             if not puertos[x].setIMEI(imei):
@@ -154,13 +161,6 @@ def changeImei():
     else:
         mb.showinfo(title='hola',message='no se encontro el archivo')
 
-def changeNumbers():
-    h=fd.askopenfile(title="DEBEN DE ESTAR EN ORDEN",filetypes=(('csv files','*.csv'),('text files','*.txt')))
-    if opener.readArchivo(h):
-        numb=opener.listNumbers()
-        for x in range(len(numb)):
-            telefonos[x].delete(0,tkinter.END)
-            telefonos[x].insert(0,numb[x])
 
 
 def setExtra():
@@ -280,9 +280,14 @@ def pasarSaldos():
             res=mb.askyesno(title='hola',message='termino de pasar, mandar mensaje?')
             if res:
                 threads=[]
+                #acomodated
+                r = random.Random()
                 for puerto in range(len(temp)//2):
+                    #this one needs to change
+                    tempnum=opin.getLine(r.randint(0,5992)).split(',')[1].strip('\n').strip()
+                    print(tempnum)
                     threads.append(
-                        threading.Thread(target=__threadmandarMSG,args=(puertos[temp[puerto]],"3328686321","hola como estas yo muy bien y tu?")))
+                        threading.Thread(target=__threadmandarMSG,args=(puertos[temp[puerto]],tempnum,"conoce nuestras ofertas Telcel!")))
                     threads[puerto].start()
                 for t in threads:
                     t.join(timeout=10)
@@ -302,10 +307,11 @@ def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this
     if(dialNumber=="" or commandList==""):
         print("se necesitan telefonos, destino e instrucciones para ejecutar")
         return
+    stuff = [10,5,0.8,11,22]
     for port in range(len(puertos)):
         tel=telefonos[port].get().strip()
         if(puertos[port].status==constants.OK and tel!=''):
-            temp=threading.Thread(target=puertos[port].dialWithCode,args=(dialNumber,commandList,tel),daemon=True)
+            temp=threading.Thread(target=puertos[port].dialWithCode,args=(dialNumber,commandList,tel,stuff),daemon=True)
             threads.append(temp)
             temp.start()
     print("mandando comando",commandList, "hacia",dialNumber)
@@ -381,7 +387,7 @@ segundos.grid(row=13,column=1)
 segundos.insert(0,'60')
 tkinter.Button(master=writeFrame,text='Dial w/ Code:',
     command=lambda: __vnSendDTMFCode(dialUssdNumber.get(),instructions.get())).grid(row=14,column=0)
-tkinter.Button(master=writeFrame,text='USSDDial',command=dialUssd).grid(row=15,column=0)
+#tkinter.Button(master=writeFrame,text='USSDDial',command=dialUssd).grid(row=15,column=0)
 tkinter.Label(master=writeFrame,text='instructions:').grid(row=17,column=0)
 instructions=tkinter.Entry(master=writeFrame,width=15,bd=4,)
 instructions.grid(row=17,column=1)
@@ -435,5 +441,8 @@ for x in range(30):
     mensajes.insert(tkinter.END,'hola'*(x%3))
 t=threading.Thread(target=constantCheck,daemon=True)
 t.start()
+
+##inyection
+
 
 app.mainloop()
