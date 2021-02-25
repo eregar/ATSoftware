@@ -216,10 +216,6 @@ class Com(object):
         else:
             print(self.comNumber,"algo salio mal")
 
-
-
-        
-
     def sendSMS(self,destino:str,contenido:str):
         if self.status==constants.OK:
             self.startSerial()
@@ -227,7 +223,7 @@ class Com(object):
             print("cambiando flag")
             self.sendRead(b'AT+CMGF=1\r\n','OK')
             print("cambiando storage")
-            self.sendRead(b'AT+CPMS="SM"\r\n','OK')
+            self.sendRead(b'AT+CPMS="ME"\r\n','OK')
             print("enviando")
             self.sendRead(b'AT+CMGS="'+destino.encode('utf-8')+b'"\r\n','>')
             print("poniendo contenido")
@@ -243,7 +239,7 @@ class Com(object):
             self.startSerial()
         if self.status==constants.OK:
             self.sendRead(b'AT+CMGF=1\r\n','OK')
-            self.sendRead(b'AT+CPMS="SM"\r\n','OK')
+            self.sendRead(b'AT+CPMS="MT"\r\n','OK')
             print("COM",self.comNumber,":") #ERASE LATER
             result=self.sendRead(b'AT+CMGL="ALL"\r\n')
             if 'OK' in result:
@@ -252,6 +248,9 @@ class Com(object):
                 print(self.comNumber,'fasho')
                 return result
     
+    def deleteSMS(self):
+        return self.sendRead(b'AT+CMGD=1,4\r\n','OK') # index, flag (1,2,3,4)
+
     def sendRead(self,msg=b'',expected='',bits=0):
         self.reading.acquire()
         if msg != b'':

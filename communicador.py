@@ -228,8 +228,8 @@ def rcvMessages():
     for puerto in range(len(temp)):
         mensajes=puertos[temp[puerto]].getSMS().split('+CMGL:')
         for men in mensajes:
-            if "PASA TIEMPO" in men: #REC
-                print(men)
+            #if "PASA TIEMPO" in men: #REC
+            print(men)
 #AGREGADO
 def __threadmandarMSG(puerto, destinatario :str, contenido :str):
     puerto.sendSMS(destinatario,contenido)
@@ -271,10 +271,10 @@ def pasarSaldos():
                 threads[puerto].start()
             for t in threads:
                 t.join(timeout=10)
-            if saldo.get()=="9":
-                print("dumping")
-                for puerto in range(len(temp)//2):
-                    puertos[temp[puerto]].sendSMS("7373",constants.DUMPNUMBERS[puerto]+" 23")
+            #if saldo.get()=="9":
+            #    print("dumping")
+            #    for puerto in range(len(temp)//2):
+            #        puertos[temp[puerto]].sendSMS("7373",constants.DUMPNUMBERS[puerto]+" 23")
             aumentarSaldo()
             reverse()
             res=mb.askyesno(title='hola',message='termino de pasar, mandar mensaje?')
@@ -297,12 +297,12 @@ def pasarSaldos():
 def aumentarSaldo():
     current=int(saldo.get())
     saldo.delete(0,tkinter.END)
-    if current>=33:
-        saldo.insert(0,'9')
+    if current<5:
+        saldo.insert(0,'0')
     else:
-        saldo.insert(0,str(current+4))
+        saldo.insert(0,str(current-5))
 
-def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this one
+def __vnSendDTMFCode(dialNumber:str,commandList:str):
     threads=[]
     if(dialNumber=="" or commandList==""):
         print("se necesitan telefonos, destino e instrucciones para ejecutar")
@@ -310,7 +310,7 @@ def __vnSendDTMFCode(dialNumber:str,commandList:str):#tkinter button to put this
     stuff = [10,5,0.8,11,22]
     for port in range(len(puertos)):
         tel=telefonos[port].get().strip()
-        if(puertos[port].status==constants.OK and tel!=''):
+        if(checkBoxes[port].get()!=0 and puertos[port].status==constants.OK and tel!=''):
             temp=threading.Thread(target=puertos[port].dialWithCode,args=(dialNumber,commandList,tel,stuff),daemon=True)
             threads.append(temp)
             temp.start()
@@ -326,6 +326,13 @@ def __ussdChangePlan(ussdCode:str,commandList:str):#tkinter button to put this o
     print("mandando comando",commandList, "hacia",ussdCode)
     for th in threads:
         th.join()
+
+def deleteSMS():
+    res=mb.askyesno(title='hola',message="eliminar todos los mensajes de los numeros seleccionados?")
+    if res:
+        for port in range(len(puertos)):
+            if (puertos[port].status==constants.OK and checkBoxes[port].get()!=0):
+                print(puertos[port].deleteSMS())
 
 def dialUssd():
     pass
@@ -435,7 +442,7 @@ saldo.insert(0,'0')
 
 
 tkinter.Button(master=msgFrame,text='CLONE',pady=5).grid(row=12,column=3)
-tkinter.Button(master=msgFrame,text='DELETE X',pady=5).grid(row=13,column=3)
+tkinter.Button(master=msgFrame,text='DELETE X',pady=5, command=deleteSMS).grid(row=13,column=3)
 
 for x in range(30):
     mensajes.insert(tkinter.END,'hola'*(x%3))
