@@ -9,7 +9,8 @@ class Opener:
         if arch:
             self.lines=arch.readlines()
             arch.close()
-            return True
+            if self._setColumns():
+                return True
         return False
 
     def getLines(self):
@@ -42,19 +43,18 @@ class Opener:
         
 
     def buscarIccid(self,ccid: str,separator=','):
-        if not self._setColumns():
-            return(None,None)
         for l in self.lines:
             l=l.split(separator)
             if ccid in l[self.iccidC]:
-                if len(l[self.numberC])!=10:
-                    print("un numero no es del tamanio correcto")
+                if len(l[self.numberC].strip('\n').strip())!=10:
+                    print("Error: el numero del archivo no es del tamanio correcto")
+                    print(l[self.numberC])
                     return(None,None)
                 if len(l)>=3:
-                    if len(l[self.imeiC])!=15:
-                        print("Warning: un imei no es del tamanio suficiente")
+                    if len(l[self.imeiC].strip('\n').strip())!=15:
+                        print("Warning: el imei no es del tamanio suficiente")
                         return(l[self.numberC],None)
-                    return(l[self.numberC],l[self.imeiC])
+                    return(l[self.numberC].strip('\n').strip(),l[self.imeiC].strip('\n').strip())
                 else:
-                    return(l[self.numberC],None)
+                    return(l[self.numberC].strip('\n').strip(),None)
         return(None,None)
